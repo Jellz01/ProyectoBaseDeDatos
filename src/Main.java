@@ -10,11 +10,11 @@ public class Main {
 
 
         Operaciones op = new Operaciones();
-       // VisualLogIn vli = new VisualLogIn(op);
+       VisualLogIn vli = new VisualLogIn(op);
         //borrarServicios bs = new borrarServicios(op);
 
        // FormularioConsultas fc = new FormularioConsultas();
-        formularioFactura ff = new formularioFactura(op);
+        //formularioFactura ff = new formularioFactura(op);
 
     }
 
