@@ -14,26 +14,21 @@ public class formularioFactura extends JFrame implements ActionListener {
     private JTextField txtNum;
     private JTextField txtFecha;
     private JTextField txtDescripcion;
-    private JTextField txtSubT;
-    private JTextField txtIva;
+    public JTextField txtSubT;
+    public JTextField txtIva;
 
     private JTextField txtCant;
-
-    private JTextField txtPrecioU;
-
-    private JTextField txtTotal;
+    public JTextField txtPrecioU;
+    public JTextField txtTotal;
 
     private Operaciones op;
-    public JComboBox clientes;
-
-    public JComboBox servicios;
-    public JComboBox usuarios;
+    public JComboBox<String> clientes;
+    public JComboBox<String> servicios;
+    public JComboBox<String> usuarios;
 
     public formularioFactura(Operaciones op) {
-
         this.op = op;
         op.conectar();
-
         super.setLayout(null);
 
         JLabel labCedula = new JLabel("Factura N°:");
@@ -93,7 +88,7 @@ public class formularioFactura extends JFrame implements ActionListener {
         labSalario.setBounds(10, 155, 90, 25);
         this.add(labSalario);
         txtIva = new JTextField();
-        txtIva.setEditable(false); // Make it non-editable
+        txtIva.setEditable(false);
         txtIva.setBounds(100, 155, 200, 25);
         this.add(txtIva);
 
@@ -134,26 +129,28 @@ public class formularioFactura extends JFrame implements ActionListener {
         this.add(labPU);
 
         txtPrecioU = new JTextField();
+        txtPrecioU.setText("0");
         txtPrecioU.setSize(200, 25);
         txtPrecioU.setLocation(100, 275);
-
+        txtPrecioU.setText("0");
+        txtPrecioU.setEnabled(false);
+        this.add(txtPrecioU);
 
         botGrabar = new JButton("Grabar");
-        botGrabar.setBounds(60, 275, 100, 25);
+        botGrabar.setBounds(60, 305, 100, 25);
         botGrabar.addActionListener(this);
         this.add(botGrabar);
 
         botCancelar = new JButton("Cancelar");
-        botCancelar.setBounds(180, 275, 100, 25);
+        botCancelar.setBounds(180, 305, 100, 25);
         botCancelar.addActionListener(this);
         this.add(botCancelar);
 
-        super.setTitle("Empleados");
-        super.setSize(400, 550);
+        super.setTitle("Facturación");
+        super.setSize(400, 400);
         super.setLocationRelativeTo(null);
         super.setResizable(false);
         super.setVisible(true);
-
 
         txtSubT.getDocument().addDocumentListener(new DocumentListener() {
             @Override
@@ -181,7 +178,6 @@ public class formularioFactura extends JFrame implements ActionListener {
             txtTotal.setText(String.valueOf(valorTT));
             txtIva.setText(String.valueOf(valorCI));
         } catch (NumberFormatException ex) {
-
             txtSubT.setText("0.0");
         }
     }
@@ -195,7 +191,6 @@ public class formularioFactura extends JFrame implements ActionListener {
             String iva = txtIva.getText();
             String totalF = txtTotal.getText();
 
-            // Parse values
             float subTT = 0;
             float IVA = 0;
             float factT = 0;
@@ -207,7 +202,6 @@ public class formularioFactura extends JFrame implements ActionListener {
                 ex.printStackTrace();
             }
 
-            // Insert the invoice header
             boolean estado = op.ingresarFacturaCabecera(numm, num, fechaa, (int) subTT, (int) IVA, (int) factT);
             if (estado) {
                 JOptionPane.showMessageDialog(this, "Factura ingresada correctamente.");
@@ -215,23 +209,15 @@ public class formularioFactura extends JFrame implements ActionListener {
             } else {
                 JOptionPane.showMessageDialog(this, "Error al ingresar la factura.");
             }
-
         } else if (e.getSource() == servicios) {
-            // Get the selected service name from the UI component
             String nombreServicio = (String) servicios.getSelectedItem();
-
-            // Retrieve the unit price for the selected service
             if (nombreServicio != null && !nombreServicio.isEmpty()) {
                 int precioUnitario = op.obtenerPrecioUnitario(nombreServicio);
                 String precioUnitarioStr = Integer.toString(precioUnitario);
-
-                // Update the text field with the unit price
-                txtPrecioU.setText(precioUnitarioStr);
-                txtPrecioU.setEnabled(false);
+                //txtPrecioU.setText(precioUnitarioStr);
             } else {
-               txtPrecioU.setText("0");
+                //txtPrecioU.setText("0");
             }
-
         } else if (e.getSource() == botCancelar) {
             this.setVisible(false);
         }
