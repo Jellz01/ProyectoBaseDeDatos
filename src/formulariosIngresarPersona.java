@@ -12,6 +12,10 @@ public class formulariosIngresarPersona extends JFrame implements ActionListener
     public JTextField txtCon;
     public JTextField txtCon1;
 
+    public JLabel labDireccion;
+
+    public JTextField txtDir;
+
     JTextField txtCedula;
     JTextField txtNombre;
     JTextField txtApellido;
@@ -26,6 +30,16 @@ public class formulariosIngresarPersona extends JFrame implements ActionListener
         op.conectar();
 
         super.setLayout(null);
+
+        labDireccion = new JLabel("Direccion");
+        labDireccion.setBounds(10,155,90,25);
+
+        this.add(labDireccion);
+
+        txtDir = new JTextField();
+        txtDir.setBounds(100,155,90,25);
+        this.add(txtDir);
+
 
         JLabel labCedula = new JLabel("Cédula:");
         labCedula.setBounds(10, 5, 90, 25);
@@ -63,12 +77,12 @@ public class formulariosIngresarPersona extends JFrame implements ActionListener
         this.add(txtSalario);
 
         JLabel labContratos = new JLabel("Tipo:");
-        labContratos.setBounds(10, 155, 90, 25);
+        labContratos.setBounds(10, 185, 90, 25);
         this.add(labContratos);
 
         contratos = new JComboBox<>();
         contratos.setSize(225, 30);
-        contratos.setLocation(100, 155);
+        contratos.setLocation(100, 185);
         contratos.addActionListener(this);
 
         // Populate the JComboBox with contract data from the database
@@ -80,44 +94,44 @@ public class formulariosIngresarPersona extends JFrame implements ActionListener
 
         JLabel labelUsu = new JLabel("Usuario:");
         labelUsu.setSize(90, 25);
-        labelUsu.setLocation(10, 190);
+        labelUsu.setLocation(10, 215);
         this.add(labelUsu);
 
         txtUsuario = new JTextField();
         txtUsuario.setSize(200, 25);
-        txtUsuario.setLocation(100, 190);
+        txtUsuario.setLocation(100, 215);
         txtUsuario.setEnabled(false);
         this.add(txtUsuario);
 
         JLabel labCon = new JLabel("Contraseña:");
         labCon.setSize(90, 25);
-        labCon.setLocation(10, 220);
+        labCon.setLocation(10, 245);
         this.add(labCon);
 
         txtCon = new JTextField();
         txtCon.setSize(200, 25);
-        txtCon.setLocation(100, 220);
+        txtCon.setLocation(100, 245);
         txtCon.setEnabled(false);
         this.add(txtCon);
 
         JLabel labCon1 = new JLabel("Contraseña nuevamente:");
         labCon1.setSize(190, 25);
-        labCon1.setLocation(10, 250);
+        labCon1.setLocation(10, 275);
         this.add(labCon1);
 
         txtCon1 = new JTextField();
         txtCon1.setSize(200, 25);
-        txtCon1.setLocation(155, 250);
+        txtCon1.setLocation(155, 275);
         txtCon1.setEnabled(false);
         this.add(txtCon1);
 
         botGrabar = new JButton("Grabar");
-        botGrabar.setBounds(40, 295, 100, 25);
+        botGrabar.setBounds(40, 305, 100, 25);
         botGrabar.addActionListener(this);
         this.add(botGrabar);
 
         botCancelar = new JButton("Cancelar");
-        botCancelar.setBounds(150, 295, 100, 25);
+        botCancelar.setBounds(150, 305, 100, 25);
         botCancelar.addActionListener(this);
         this.add(botCancelar);
 
@@ -148,12 +162,15 @@ public class formulariosIngresarPersona extends JFrame implements ActionListener
         }
 
         if (e.getSource() == botGrabar) {
+
+            String cedula = txtCedula.getText();
             String nombre = txtNombre.getText();
             String apellido = txtApellido.getText();
             String telefono = txtDireccion.getText();
-            String salario = txtSalario.getText();
+            String email = txtSalario.getText();
+            String direccion = txtDir.getText();
 
-            boolean estado = op.agregarEmpleado(1, nombre, apellido, telefono, salario, "caaca");
+            boolean estado = op.agregarEmpleado(nombre, apellido,direccion, telefono, email,cedula );
 
             if (estado) {
                 this.setVisible(false);

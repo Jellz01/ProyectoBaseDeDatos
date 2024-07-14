@@ -4,6 +4,9 @@ import java.awt.event.ActionListener;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class formularioConsulta extends JFrame implements ActionListener {
 
@@ -52,11 +55,8 @@ public class formularioConsulta extends JFrame implements ActionListener {
 
         // Populate the JComboBox with contract data from the database
         ArrayList<String> listaTipos = null;
-        try {
-            listaTipos = op.obtenerTiposAnimales();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        listaTipos = op.obtenerTiposAnimales();
+
         System.out.print(listaTipos);
         for (String tipo : listaTipos) {
             tipos.addItem(tipo);
@@ -132,8 +132,42 @@ public class formularioConsulta extends JFrame implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == botGrabar) {
 
+
+        if (e.getSource() == botGrabar) {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
+            SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+
+            try {
+
+                String fechaTexto = txtFecha.getText();
+                String horaTexto = txtHora.getText();
+
+
+                String fechaHoraTexto = fechaTexto + " " + horaTexto;
+
+                // Parsear el texto combinado en un objeto Date
+                Date fechaHoraDate = dateTimeFormat.parse(fechaHoraTexto);
+
+                String nombreMascota = txtNombre.getText();
+                String fechaHora = dateTimeFormat.format(fechaHoraDate);
+                String estadoo = "Scheduled";
+                String empleado = (String) veterinarios.getSelectedItem();
+                int empleadoI = (Integer) op.obtenerIDVeterinario(empleado);
+
+                String cliente = (String) clientes.getSelectedItem();
+                int clienteI = op.obtenerIDCliente(cliente);
+
+
+
+                System.out.println("Fecha y Hora: " + fechaHora);
+
+                boolean estado = op.agregarCita(nombreMascota, fechaHora, estadoo, 1, empleadoI, 1);
+
+            } catch (ParseException ex) {
+                System.err.println("Error en el formato de fecha o hora: " + ex.getMessage());
+            }
         }
         if (e.getSource() == botCancelar) {
             this.setVisible(false);

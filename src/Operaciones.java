@@ -1,17 +1,14 @@
 import oracle.sql.CHAR;
 
 import java.awt.List;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.sql.ResultSet;
 import javax.swing.*;
-import java.sql.SQLIntegrityConstraintViolationException;
 
 
 public class Operaciones {
@@ -59,18 +56,18 @@ public class Operaciones {
         return state;
     }
 
-    public boolean agregarEmpleado(int cedula, String nombre, String apellido, String telefono, String direccion, String email) {
+    public boolean agregarEmpleado(String cedula, String nombre, String apellido, String telefono, String direccion, String email) {
         boolean state = false;
 
         try {
-            PreparedStatement sentencia = conn.prepareStatement("INSERT INTO VE_PERSONAS VALUES (?,?,?,?,?,?)");
+            PreparedStatement sentencia = conn.prepareStatement("INSERT INTO VE_PERSONAS VALUES (SEQ_VE_PERSONAS.NEXTVAL,?,?,?,?,?,?)");
 
-            sentencia.setInt(1, cedula);
-            sentencia.setString(2, nombre);
-            sentencia.setString(3, apellido);
+            sentencia.setString(1, nombre);
+            sentencia.setString(2, apellido);
+            sentencia.setString(3, direccion);
             sentencia.setString(4, telefono);
-            sentencia.setString(5, direccion);
-            sentencia.setString(6, email);
+            sentencia.setString(5, email);
+            sentencia.setString(6, cedula);
 
             int rowsAffected = sentencia.executeUpdate();
 
@@ -92,6 +89,115 @@ public class Operaciones {
 
         return state;
     }
+
+    public boolean agregarCliente(String cedula, String nombre, String apellido, String telefono, String direccion, String email) {
+        boolean state = false;
+
+        try {
+            PreparedStatement sentencia = conn.prepareStatement("INSERT INTO VE_PERSONAS VALUES (SEQ_VE_PERSONAS.NEXTVAL, ?, ?,?,?,?,?)");
+
+            sentencia.setString(1, nombre);
+            sentencia.setString(2, apellido);
+            sentencia.setString(3, direccion);
+            sentencia.setString(4, telefono);
+            sentencia.setString(5, email);
+            sentencia.setString(6, cedula);
+
+            int rowsAffected = sentencia.executeUpdate();
+
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(null, "Se ingreso un Cliente correctamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
+                state = true;
+            } else {
+                JOptionPane.showMessageDialog(null, "NO Se ingreso un Cliente ERROR", "ERROR", JOptionPane.ERROR);
+            }
+
+            sentencia.close();
+        } catch (SQLIntegrityConstraintViolationException duplicateKeyException) {
+            JOptionPane.showMessageDialog(null, "ERROR: Se ha intentado insertar un valor duplicado para la clave primaria.", "ERROR", JOptionPane.ERROR_MESSAGE);
+            // Handle the exception as needed, log, or perform additional actions
+            duplicateKeyException.printStackTrace();
+        } catch (SQLException ex) {
+            Logger.getLogger(Operaciones.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return state;
+    }
+
+
+    public boolean agregarCita(String nombreMascota, String fechaHoraStr, String estado, int clienteId, int empleadoId, int mascotaId) {
+        boolean state = false;
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm"); // Ajusta el formato aquí
+
+        try {
+            // Convertir String a Date
+            Date parsedDate = sdf.parse(fechaHoraStr);
+            Timestamp fechaHora = new Timestamp(parsedDate.getTime());
+
+            PreparedStatement sentencia = conn.prepareStatement(
+                    "INSERT INTO VE_CITAS (CIT_ID, CIT_NOMBRE_MASCOTA, CIT_FECHA_HORA, CIT_ESTADO, CLI_ID, EMP_ID, MAS_ID) " +
+                            "VALUES (SEQ_VE_CITAS.NEXTVAL, ?, ?, ?, ?, ?, ?)"
+            );
+
+            sentencia.setString(1, nombreMascota);
+            sentencia.setTimestamp(2, fechaHora);
+            sentencia.setString(3, estado);
+            sentencia.setInt(4, clienteId);
+            sentencia.setInt(5, empleadoId);
+            sentencia.setInt(6, mascotaId);
+
+            int rowsAffected = sentencia.executeUpdate();
+
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(null, "Cita agregada correctamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
+                state = true;
+            } else {
+                JOptionPane.showMessageDialog(null, "No se pudo agregar la cita", "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
+
+            sentencia.close();
+        } catch (ParseException e) {
+            JOptionPane.showMessageDialog(null, "ERROR: El formato de la fecha y hora es incorrecto.", "ERROR", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        } catch (SQLException ex) {
+            Logger.getLogger(Operaciones.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return state;
+    }
+
+    public boolean agregarTipoAnimal(String tipo) {
+        boolean state = false;
+
+        try {
+            PreparedStatement sentencia = conn.prepareStatement("INSERT INTO VE_TIPO_MASCOTAS VALUES (SEQ_VE_PERSONAS.NEXTVAL,?)");
+
+            sentencia.setString(1, tipo);
+
+
+            int rowsAffected = sentencia.executeUpdate();
+
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(null, "Se ingreso un tipo de animal correctamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
+                state = true;
+            } else {
+                JOptionPane.showMessageDialog(null, "NO Se ingreso un tipo de animal ERROR", "ERROR", JOptionPane.ERROR);
+            }
+
+            sentencia.close();
+        } catch (SQLIntegrityConstraintViolationException duplicateKeyException) {
+            JOptionPane.showMessageDialog(null, "ERROR:Ya existe es TIPO de animal.", "ERROR", JOptionPane.ERROR_MESSAGE);
+            // Handle the exception as needed, log, or perform additional actions
+            duplicateKeyException.printStackTrace();
+        } catch (SQLException ex) {
+            Logger.getLogger(Operaciones.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+
+        return state;
+    }
+
+
 
 
     private void closeResources(AutoCloseable... resources) {
@@ -139,12 +245,12 @@ public class Operaciones {
         ArrayList<String> tiposanimales = new ArrayList<>();
 
         try {
-            String query = "SELECT TIPO_DESC FROM TIPOSANIMAL";
+            String query = "SELECT MAS_NOMBRE FROM VE_TIPO_MASCOTAS";
             PreparedStatement statement = conn.prepareStatement(query);
             ResultSet resultSet = statement.executeQuery();
 
             while (resultSet.next()) {
-                String descripcion = resultSet.getString("TIPO_DESC");
+                String descripcion = resultSet.getString("MAS_NOMBRE");
                 tiposanimales.add(descripcion);
                 System.out.print(descripcion);
             }
@@ -185,35 +291,77 @@ public class Operaciones {
         return state;
     }
 
-    public ArrayList<String> obtenerEmpleadoPorCedula(String cedula) {
-        ArrayList<String> empleadoList = new ArrayList<>();
+    public int obtenerIDVeterinario(String nombre) {
+        int idResultado = 0; // Initialize ID to 0 or any default value
 
         try {
-            String query = "SELECT * FROM Empleado WHERE Cedula = ?";
+            String query = "SELECT VE.EMP_ID FROM VE_PERSONAS PER JOIN VE_EMPLEADOS VE ON VE.EMP_ID = PER.PER_ID WHERE PER.PER_NOMBRE = ?";
             try (PreparedStatement statement = conn.prepareStatement(query)) {
-                statement.setString(1, cedula);
+                statement.setString(1, nombre);
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        // Retrieve the EMP_ID from the ResultSet
+                        idResultado = resultSet.getInt("EMP_ID");
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Handle the exception as needed
+        }
+
+        return idResultado;
+    }
+
+    public int obtenerIDCliente(String nombre) {
+        int idResultado = 0; // Initialize ID to 0 or any default value
+
+        try {
+            String query = "SELECT PER_ID FROM VE_PERSONAS WHERE PER_NOMBRE  = ?";
+            try (PreparedStatement statement = conn.prepareStatement(query)) {
+                statement.setString(1, nombre);
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+
+                        idResultado = resultSet.getInt("PER_ID");
+                        System.out.println("CACAC"+idResultado);
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Handle the exception as needed
+        }
+
+        return idResultado;
+    }
+
+
+
+    public ArrayList<String> obtenerAnimalesTipos() {
+        ArrayList<String> listaTipos = new ArrayList<>();
+
+        try {
+            String query = "SELECT MAS_ID,MAS_NOMBRE FROM VE_TIPO_MASCOTAS";
+            try (PreparedStatement statement = conn.prepareStatement(query)) {
+
 
                 try (ResultSet resultSet = statement.executeQuery()) {
                     while (resultSet.next()) {
                         // Assuming your Empleado table has columns like 'Cedula', 'Nombre', 'Apellido', etc.
-                        String cedulaResult = resultSet.getString("Cedula");
-                        String nombreResult = resultSet.getString("Nombre");
-                        String apellidoResult = resultSet.getString("Apellido");
-                        String telefono = resultSet.getString("Telefono");
-                        String salario = resultSet.getString("Salario");
-                        int idTipoContrato = resultSet.getInt("idTipoContrato");
+                        String IDResult = resultSet.getString("MAS_ID");
+                        String nombreResult = resultSet.getString("MAS_NOMBRE");
 
-                        // Convert idTipoContrato to string
-                        String idTipoContratoString = String.valueOf(idTipoContrato);
+
 
                         // Add more columns as needed
 
                         // Create a string representation of the employee details
-                        String empleadoDetails = "Cedula: " + cedulaResult + ", Nombre: " + nombreResult +
-                                ", Apellido: " + apellidoResult + ", Telefono: " + telefono +
-                                ", Salario: " + salario + ", idTipoContrato: " + idTipoContratoString;
+                        String empleadoDetails = "ID: " + IDResult + ", Nombre: " + nombreResult;
 
-                        empleadoList.add(empleadoDetails);
+                        listaTipos.add(empleadoDetails);
                     }
 
 
@@ -224,12 +372,13 @@ public class Operaciones {
             // Handle the exception as needed
         }
 
-        if (empleadoList.isEmpty()) {
-            JOptionPane.showMessageDialog(null, "No existe esa cedula en nuestra base de datos", "ERROR", JOptionPane.ERROR_MESSAGE);
+        if (listaTipos.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "No existen tipos de animales en nuestro sistema", "ERROR", JOptionPane.ERROR_MESSAGE);
         }
 
-        return empleadoList;
+        return listaTipos;
     }
+
 
     public ArrayList<String> obtenerTodosLosEmpleados() {
         ArrayList<String> empleadoList = new ArrayList<>();
@@ -267,11 +416,55 @@ public class Operaciones {
     }
 
 
+
+    public ArrayList<String> obtenerTodosLasCitas() {
+        ArrayList<String> listaCitas = new ArrayList<>();
+
+        try {
+            String query = "SELECT * FROM VE_PERSONAS";
+            try (PreparedStatement statement = conn.prepareStatement(query);
+                 ResultSet resultSet = statement.executeQuery()) {
+
+                while (resultSet.next()) {
+
+                    String citID = resultSet.getString("CIT_ID");
+                    String nombreMascota = resultSet.getString("CIT_NOMBRE_MASCOTA");
+                    String fechaHora = resultSet.getString("CIT_FECHA_HORA");
+                    String citEstado = resultSet.getString("CIT_ESTADO");
+                    String idCli = resultSet.getString("CLI_ID");
+                    String idEmp = resultSet.getString("EMP_ID");
+                    String idMas = resultSet.getString("MAS_ID");
+
+
+                    // Suponiendo que citID, nombreMascota, fechaHora, citEstado, idCli, idEmp, idMas son variables correctamente definidas y asignadas
+
+                    String empleadoDetails = "Cedula: " + citID +
+                            ", Nombre: " + nombreMascota +
+                            ", Apellido: " + fechaHora +
+                            ", Telefono: " + citEstado +
+                            ", Direccion: " + idCli +
+                            ", perEmail: " + idEmp +
+                            ", permail: " + idMas;
+
+                    listaCitas.add(empleadoDetails);
+
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Handle the exception as needed
+        }
+
+        return listaCitas;
+
+    }
+
+
     public ArrayList<String> obtenerNombreClientes() {
         ArrayList<String> clienteLista = new ArrayList<>();
 
         try {
-            String query = "SELECT * FROM VE_PERSONAS";
+            String query = "SELECT PER_NOMBRE,PER_APELLIDO FROM VE_PERSONAS";
             try (PreparedStatement statement = conn.prepareStatement(query);
                  ResultSet resultSet = statement.executeQuery()) {
 

@@ -121,7 +121,7 @@ public class formularioModificarPersona extends JFrame implements ActionListener
 
 
 
-            boolean estado = op.agregarEmpleado(1, nombre, apellido, telefono, salario,"caca");
+            boolean estado = op.agregarEmpleado(cedula, nombre, apellido, telefono, salario,"caca");
 
             if(estado == true){
                 this.setVisible(false);

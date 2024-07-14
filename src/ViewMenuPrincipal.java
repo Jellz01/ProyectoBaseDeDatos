@@ -310,6 +310,7 @@ public class ViewMenuPrincipal extends JFrame implements ActionListener {
         }
         else if (e.getSource() == listarFCita){
             ControlerMenuPrincipal cmp = new ControlerMenuPrincipal(19,vmp);
+            System.out.println("Entro");
 
         }
         else if (e.getSource() == ingresoServicio){

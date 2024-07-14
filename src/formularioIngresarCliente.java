@@ -23,6 +23,8 @@ public class formularioIngresarCliente extends JFrame implements ActionListener 
         JTextField txtDireccion;
         JTextField txtSalario;
 
+        JTextField txtTelefono;
+
         private Operaciones op;
         private JComboBox contratos;
 
@@ -60,7 +62,7 @@ public class formularioIngresarCliente extends JFrame implements ActionListener 
             txtApellido.setBounds(100, 65, 150, 25); // Adjusted width
             this.add(txtApellido);
 
-            JLabel labDireccion = new JLabel("Telefono:");
+            JLabel labDireccion = new JLabel("Direccion:");
             labDireccion.setBounds(10, 95, 90, 25);
             this.add(labDireccion);
             txtDireccion = new JTextField();
@@ -74,6 +76,12 @@ public class formularioIngresarCliente extends JFrame implements ActionListener 
             txtSalario.setBounds(100, 125,200,25);
             this.add(txtSalario);
 
+            JLabel labTel = new JLabel("Telefono:");
+            labTel.setBounds(10,155,90,25);
+            this.add(labTel);
+            txtTelefono = new JTextField();
+            txtTelefono.setBounds(100,155,200,25);
+            this.add(txtTelefono);
 
 
 
@@ -101,20 +109,20 @@ public class formularioIngresarCliente extends JFrame implements ActionListener 
         public void actionPerformed(ActionEvent e) {
             if (e.getSource() == botGrabar) {
 
-
+                String cedula = txtCedula.getText();
                 String nombre = txtNombre.getText();
                 String apellido = txtApellido.getText();
-                String telefono = txtDireccion.getText();
-                String salario = txtSalario.getText();
+                String direccion = txtDireccion.getText();
+                String email = txtSalario.getText();
+                String telefono = txtTelefono.getText();
 
 
 
 
-                boolean estado = op.agregarEmpleado(1, nombre, apellido, telefono, salario,"caaca");
+               boolean estado = op.agregarCliente( nombre, apellido, direccion, telefono,email,cedula);
 
                 if(estado == true){
-                    this.setVisible(false);
-
+                  this.setVisible(false);
                 }
                 else{
                     this.setVisible(true);

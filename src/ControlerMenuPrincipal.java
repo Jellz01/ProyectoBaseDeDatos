@@ -46,6 +46,12 @@ public class ControlerMenuPrincipal {
             case 7:
                 break;
             case 8:
+                try {
+                    listarTiposAnimales lta = new listarTiposAnimales(op);
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+
                 break;
             case 9:
                 try {
@@ -95,6 +101,11 @@ public class ControlerMenuPrincipal {
                 break;
 
             case 19:
+                try {
+                    ListarConsultas lc = new ListarConsultas(op);
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
                 break;
 
             case 20:

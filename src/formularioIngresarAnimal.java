@@ -35,63 +35,36 @@ public class formularioIngresarAnimal extends JFrame implements ActionListener {
 
 
 
-        JLabel labCLiente = new JLabel("Cliente:");
-        labCLiente.setBounds(10,5,90,25);
-
-        clientes = new JComboBox<>();
-        clientes.setSize(215, 25);
-        clientes.setLocation(100, 5);
-
-        // Populate the JComboBox with contract data from the database
-
-        ArrayList<String> listaClientes = op.obtenerNombreClientes();
-        System.out.print(listaClientes);
-        for (String clientee : listaClientes) {
-            clientes.addItem(clientee);
-        }
-
 
         JLabel labTipo = new JLabel("Tipo:");
         labTipo.setBounds(10, 35, 90, 25);
         this.add(labTipo);
 
-        tipos = new JComboBox<>();
-        tipos.setSize(115, 25);
-        tipos.setLocation(100, 35);
+       txtTipo = new JTextField();
+       txtTipo.setBounds(70,35,90,25);
+       this.add(txtTipo);
 
-        // Populate the JComboBox with contract data from the database
 
-        ArrayList<String> listaTipos = op.obtenerTiposAnimales();
-        System.out.print(listaTipos);
-        for (String tipo : listaTipos) {
-            tipos.addItem(tipo);
-        }
 
-        JLabel labNombre = new JLabel("Nombre:");
-        labNombre.setBounds(10,70,90,25);
-
-        txtNombre = new JTextField();
-        txtNombre.setBounds(100,70,140,25);
-        this.add(labNombre);
-        this.add(txtNombre);
 
         botGrabar = new JButton("Grabar");
-        botGrabar.setBounds(40, 110, 100, 25);
+        botGrabar.setBounds(40, 70, 100, 25);
         botGrabar.addActionListener(this);
         this.add(botGrabar);
 
         botCancelar = new JButton("Cancelar");
-        botCancelar.setBounds(150, 110, 100, 25);
+        botCancelar.setBounds(150, 70, 100, 25);
         botCancelar.addActionListener(this);
         this.add(botCancelar);
-        this.add(tipos);
+        this.add(txtTipo);
         this.add(labTipo);
-        this.add(labCLiente);
-        this.add(clientes);
+        this.add(botGrabar);
+
+
 
 
         super.setTitle("Ingresar Animales");
-        super.setSize(350, 200);
+        super.setSize(300, 150);
         super.setLocationRelativeTo(null);
         super.setResizable(false);
         super.setVisible(true);
@@ -101,6 +74,16 @@ public class formularioIngresarAnimal extends JFrame implements ActionListener {
         if (e.getSource() == botGrabar) {
 
 
+            String tipo = txtTipo.getText();
+
+            boolean estado = op.agregarTipoAnimal(tipo);
+
+            if(estado == true ){
+                this.setVisible(false);
+            }
+            else{
+                this.setVisible(true);
+            }
 
         }
         if (e.getSource() == botCancelar) {
