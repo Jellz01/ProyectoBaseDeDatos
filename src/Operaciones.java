@@ -662,24 +662,39 @@ public class Operaciones {
     }
 
 
-    public boolean agregarServicio(int ser_id, String ser_codigo, String ser_nombre, int ser_precio, String ser_tiene_iva, String ser_estado) {
+    public boolean agregarServicio(String ser_codigo, String ser_nombre, float ser_precio, String ser_tiene_iva, String ser_estado) {
         boolean state = false;
         PreparedStatement sentencia = null;
+        ResultSet rs = null;
 
         try {
-            sentencia = conn.prepareStatement("INSERT INTO VE_SERVICIOS VALUES (?,?,?,?,?,?)");
-            sentencia.setInt(1, ser_id);
-            sentencia.setString(2, ser_codigo);
-            sentencia.setString(3, ser_nombre);
-            sentencia.setInt(4, ser_precio);
-            sentencia.setString(5, ser_tiene_iva);
-            sentencia.setString(6, ser_estado);
+            // Verificar que ser_codigo no sea null o vacío
+            if (ser_codigo == null || ser_codigo.isEmpty()) {
+                System.err.println("Error: El código del servicio no puede ser nulo o vacío");
+                return false;
+            }
 
+            // Comprobar si el código del servicio ya existe
+            String checkQuery = "SELECT COUNT(*) FROM VE_SERVICIOS WHERE SER_CODIGO = ?";
+            sentencia = conn.prepareStatement(checkQuery);
+            sentencia.setString(1, ser_codigo);
+            rs = sentencia.executeQuery();
+            if (rs.next() && rs.getInt(1) > 0) {
+                System.err.println("Error: El código del servicio ya existe");
+                return false;
+            }
+
+            // Preparar la inserción
+            sentencia = conn.prepareStatement("INSERT INTO VE_SERVICIOS VALUES (SEQ_VE_SERVICIOS.NEXTVAL, ?, ?, ?, ?, ?)");
+            sentencia.setString(1, ser_codigo);
+            sentencia.setString(2, ser_nombre);
+            sentencia.setFloat(3, ser_precio);
+            sentencia.setString(4, ser_tiene_iva);
+            sentencia.setString(5, ser_estado);
 
             int rowsAffected = sentencia.executeUpdate();
-
             if (rowsAffected > 0) {
-                System.out.println("Servico agregado exitosamente");
+                System.out.println("Servicio agregado exitosamente");
                 state = true;
             } else {
                 System.err.println("Error: No se pudo agregar el servicio");
@@ -687,7 +702,7 @@ public class Operaciones {
         } catch (SQLException ex) {
             Logger.getLogger(Operaciones.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
-            closeResources(sentencia);
+            closeResources(rs, sentencia);
         }
 
         return state;

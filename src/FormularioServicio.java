@@ -133,12 +133,12 @@ public class FormularioServicio extends JFrame implements ActionListener {
             String codigo = txtId.getText();
             String nombre = txtNombre.getText();
             int precio = Integer.parseInt(txtPrecio.getText());
-            char iva ;
+            String iva ;
             if(sIva.isSelected()){
-                iva = 'Y';
+                iva = "Y";
             }
             else{
-                iva = 'N';
+                iva = "N";
             }
             String estadoo;
             if(activo.isSelected()){
@@ -148,7 +148,7 @@ public class FormularioServicio extends JFrame implements ActionListener {
             else{
                 estadoo = "Desactivado";
             }
-            boolean cerrar = op.agregarServicio(id,codigo,nombre,precio, String.valueOf(iva),estadoo);
+            boolean cerrar = op.agregarServicio(codigo,nombre,precio,iva,estadoo);
             if(cerrar==true){
                 this.setVisible(false);
             }
