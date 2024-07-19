@@ -3,6 +3,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Properties;
 
 public class Main {
     public static void main(String[] args) {
@@ -10,7 +11,9 @@ public class Main {
 
 
         Operaciones op = new Operaciones();
-       VisualLogIn vli = new VisualLogIn(op);
+
+
+        VisualLogIn vli = new VisualLogIn(op);
         //borrarServicios bs = new borrarServicios(op);
 
        // FormularioConsultas fc = new FormularioConsultas();

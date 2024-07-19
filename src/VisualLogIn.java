@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Properties;
 
 public class VisualLogIn extends JFrame implements ActionListener {
 
@@ -12,9 +13,11 @@ public class VisualLogIn extends JFrame implements ActionListener {
     private JLabel labelUsu;
     private JLabel labelCon;
     private Operaciones op;
+    Properties properties;
 
 
     public VisualLogIn(Operaciones op){
+        this.properties=properties;
         this.op = op;
         op.conectar();
         this.setSize(300,200);

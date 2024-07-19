@@ -20,22 +20,20 @@
     </orderEntry>
     <orderEntry type="module-library">
       <library>
-        <CLASSES />
+        <CLASSES>
+          <root url="jar://$USER_HOME$/Downloads/activation-1.1.1.jar!/" />
+        </CLASSES>
         <JAVADOC />
-        <SOURCES>
-          <root url="jar://$USER_HOME$/Downloads/LGoodDatePicker-master.zip!/LGoodDatePicker-master/Project/src/main/java" />
-          <root url="jar://$USER_HOME$/Downloads/LGoodDatePicker-master.zip!/LGoodDatePicker-master/Project/src/test/java" />
-        </SOURCES>
+        <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
       <library>
-        <CLASSES />
+        <CLASSES>
+          <root url="jar://$USER_HOME$/Downloads/javax.mail-1.6.2.jar!/" />
+        </CLASSES>
         <JAVADOC />
-        <SOURCES>
-          <root url="file://$USER_HOME$/Downloads/LGoodDatePicker-master/LGoodDatePicker-master/Project/src/main/java" />
-          <root url="file://$USER_HOME$/Downloads/LGoodDatePicker-master/LGoodDatePicker-master/Project/src/test/java" />
-        </SOURCES>
+        <SOURCES />
       </library>
     </orderEntry>
   </component>

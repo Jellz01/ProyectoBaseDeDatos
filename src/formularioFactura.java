@@ -5,6 +5,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Properties;
 
 public class formularioFactura extends JFrame implements ActionListener {
 
@@ -77,37 +78,37 @@ public class formularioFactura extends JFrame implements ActionListener {
         this.add(usuarios);
 
         JLabel labDireccion = new JLabel("Subtotal:");
-        labDireccion.setBounds(10, 125, 90, 25);
+        labDireccion.setBounds(10, 185, 90, 25);
         this.add(labDireccion);
         txtSubT = new JTextField();
-        txtSubT.setBounds(100, 125, 200, 25);
+        txtSubT.setBounds(100, 185, 200, 25);
         txtSubT.setText("0");
         this.add(txtSubT);
 
         JLabel labSalario = new JLabel("IVA 15%:");
-        labSalario.setBounds(10, 155, 90, 25);
+        labSalario.setBounds(10, 245, 90, 25);
         this.add(labSalario);
         txtIva = new JTextField();
         txtIva.setEditable(false);
-        txtIva.setBounds(100, 155, 200, 25);
+        txtIva.setBounds(100, 245, 200, 25);
         this.add(txtIva);
 
         JLabel labTotal = new JLabel("Total:");
-        labTotal.setBounds(10, 185, 90, 25);
+        labTotal.setBounds(10, 275, 90, 25);
         this.add(labTotal);
         txtTotal = new JTextField();
         txtTotal.setSize(200, 25);
-        txtTotal.setLocation(100, 185);
+        txtTotal.setLocation(100, 275);
         txtTotal.setEnabled(false);
         this.add(txtTotal);
 
         JLabel labDesc = new JLabel("Servicio:");
-        labDesc.setBounds(10, 215, 90, 25);
+        labDesc.setBounds(10, 125, 90, 25);
         this.add(labDesc);
 
         servicios = new JComboBox<>();
         servicios.setSize(120, 25);
-        servicios.setLocation(100, 215);
+        servicios.setLocation(100, 125);
         servicios.addActionListener(this);
         ArrayList<String> listaServicios = op.obtenerServiciosCombo();
         for (String servicio : listaServicios) {
@@ -116,23 +117,27 @@ public class formularioFactura extends JFrame implements ActionListener {
         this.add(servicios);
 
         JLabel labCant = new JLabel("Cantidad");
-        labCant.setBounds(10, 245, 90, 25);
+        labCant.setBounds(10, 155, 90, 25);
         this.add(labCant);
 
         txtCant = new JTextField();
         txtCant.setSize(200, 25);
-        txtCant.setLocation(100, 245);
+        txtCant.setLocation(100, 155);
         this.add(txtCant);
 
+
+        String precioUni = String.valueOf(op.obtenerPrecioUnitario(servicios.getName()));
+        System.out.println(precioUni);
+
         JLabel labPU = new JLabel("Precio por 1:");
-        labPU.setBounds(10, 275, 90, 25);
+        labPU.setBounds(10, 215, 90, 25);
         this.add(labPU);
 
         txtPrecioU = new JTextField();
-        txtPrecioU.setText("0");
+        txtPrecioU.setText(precioUni);
         txtPrecioU.setSize(200, 25);
-        txtPrecioU.setLocation(100, 275);
-        txtPrecioU.setText("0");
+        txtPrecioU.setLocation(100, 215);
+
         txtPrecioU.setEnabled(false);
         this.add(txtPrecioU);
 
@@ -184,6 +189,16 @@ public class formularioFactura extends JFrame implements ActionListener {
 
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == botGrabar) {
+            String cliente = (String) clientes.getSelectedItem();
+            String email = op.obtenerEmailCliente(cliente);
+            Properties properties = new Properties();
+            properties.put("mail.smtp.auth", "true");
+            properties.put("mail.smtp.starttls.enable", "true");
+            properties.put("mail.smtp.host", "smtp.gmail.com");
+            properties.put("mail.smtp.port", "587");
+            SendEmail sm = new SendEmail(properties,email);
+
+
             String num = txtNum.getText();
             int numm = Integer.parseInt(num);
             String fechaa = txtFecha.getText();

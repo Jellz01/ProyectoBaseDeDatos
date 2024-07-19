@@ -119,7 +119,7 @@ public class formularioIngresarCliente extends JFrame implements ActionListener 
 
 
 
-               boolean estado = op.agregarCliente( nombre, apellido, direccion, telefono,email,cedula);
+               boolean estado = op.agregarCliente(cedula,nombre,apellido,telefono,direccion,email);
 
                 if(estado == true){
                   this.setVisible(false);

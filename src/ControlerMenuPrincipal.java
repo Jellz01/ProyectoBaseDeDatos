@@ -1,12 +1,15 @@
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Properties;
 
 public class ControlerMenuPrincipal {
 
     private ArrayList<String> empleados;
     Operaciones op = new Operaciones();
+    Properties properties;
 
     public ControlerMenuPrincipal(int opcion, ViewMenuPrincipal vmp){
+
         empleados = new ArrayList<>();
         switch (opcion) {
             case 1:

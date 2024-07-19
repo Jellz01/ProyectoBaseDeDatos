@@ -1,8 +1,8 @@
-import javax.naming.ldap.Control;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Properties;
 import java.util.Random;
 
 public class ViewMenuPrincipal extends JFrame implements ActionListener {
@@ -53,9 +53,11 @@ public class ViewMenuPrincipal extends JFrame implements ActionListener {
     private JButton botCerrar;
     private ViewMenuPrincipal vmp;
 
+    Properties properties;
 
     public void menu(ViewMenuPrincipal vmp){
         this.vmp = vmp;
+        this.properties = properties;
 
 
 

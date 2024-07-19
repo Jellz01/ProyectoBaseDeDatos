@@ -90,35 +90,71 @@ public class Operaciones {
         return state;
     }
 
-    public boolean agregarCliente(String cedula, String nombre, String apellido, String telefono, String direccion, String email) {
+    public boolean agregarCliente(String cedula, String nombre, String apellido, String telefono, String direccion, String correoElectronico) {
         boolean state = false;
 
+        long personaId = -1; // Use long for handling larger IDs
+
         try {
-            PreparedStatement sentencia = conn.prepareStatement("INSERT INTO VE_PERSONAS VALUES (SEQ_VE_PERSONAS.NEXTVAL, ?, ?,?,?,?,?)");
-
-            sentencia.setString(1, nombre);
-            sentencia.setString(2, apellido);
-            sentencia.setString(3, direccion);
-            sentencia.setString(4, telefono);
-            sentencia.setString(5, email);
-            sentencia.setString(6, cedula);
-
-            int rowsAffected = sentencia.executeUpdate();
-
-            if (rowsAffected > 0) {
-                JOptionPane.showMessageDialog(null, "Se ingreso un Cliente correctamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
-                state = true;
-            } else {
-                JOptionPane.showMessageDialog(null, "NO Se ingreso un Cliente ERROR", "ERROR", JOptionPane.ERROR);
+            // Step 1: Obtain the next sequence value
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT SEQ_VE_PERSONAS.NEXTVAL AS NEXT_ID FROM DUAL");
+            if (rs.next()) {
+                personaId = rs.getLong("NEXT_ID");
             }
+            rs.close();
+            stmt.close();
 
-            sentencia.close();
+            // Step 2: Insert into VE_PERSONAS using the obtained ID
+            PreparedStatement sentenciaPersona = conn.prepareStatement(
+                    "INSERT INTO VE_PERSONAS (PER_ID, PER_NOMBRE, PER_APELLIDO, PER_DIRECCION, PER_TELEFONO, PER_CORREO_ELECTRONICO, PER_CEDULA) VALUES (?, ?, ?, ?, ?, ?, ?)"
+            );
+
+            sentenciaPersona.setLong(1, personaId);
+            sentenciaPersona.setString(2, nombre);
+            sentenciaPersona.setString(3, apellido);
+            sentenciaPersona.setString(4, direccion);
+            sentenciaPersona.setString(5, telefono);
+            sentenciaPersona.setString(6, correoElectronico);
+            System.out.println(correoElectronico);
+            sentenciaPersona.setString(7, cedula);
+
+            int rowsAffectedPersona = sentenciaPersona.executeUpdate();
+
+            if (rowsAffectedPersona > 0) {
+                sentenciaPersona.close();
+
+                // Step 3: Insert into VE_CLIENTES using the same ID
+                PreparedStatement sentenciaCliente = conn.prepareStatement(
+                        "INSERT INTO VE_CLIENTES (CLI_ID, PER_ID, CLI_ACTIVO) VALUES (SEQ_VE_CLIENTES.NEXTVAL, ?, 'Y')"
+                );
+                sentenciaCliente.setLong(1, personaId);
+
+                int rowsAffectedCliente = sentenciaCliente.executeUpdate();
+                if (rowsAffectedCliente > 0) {
+                    JOptionPane.showMessageDialog(null, "Se ingresó un Cliente correctamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
+                    state = true;
+                } else {
+                    JOptionPane.showMessageDialog(null, "No se ingresó el Cliente. ERROR", "ERROR", JOptionPane.ERROR_MESSAGE);
+                }
+                sentenciaCliente.close();
+            } else {
+                JOptionPane.showMessageDialog(null, "No se ingresó la Persona. ERROR", "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
         } catch (SQLIntegrityConstraintViolationException duplicateKeyException) {
             JOptionPane.showMessageDialog(null, "ERROR: Se ha intentado insertar un valor duplicado para la clave primaria.", "ERROR", JOptionPane.ERROR_MESSAGE);
-            // Handle the exception as needed, log, or perform additional actions
             duplicateKeyException.printStackTrace();
         } catch (SQLException ex) {
             Logger.getLogger(Operaciones.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            // Ensure you close the connection
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    Logger.getLogger(Operaciones.class.getName()).log(Level.SEVERE, null, e);
+                }
+            }
         }
 
         return state;
@@ -838,14 +874,14 @@ public class Operaciones {
         ArrayList<String> listaClientes = new ArrayList<>();
 
         try {
-            String query = "SELECT PER_NOMBRE FROM VE_CLIENTES VC , VE_PERSONAS VP WHERE PER_ID=CLI_ID ";
+            String query = "SELECT VP.PER_NOMBRE FROM VE_CLIENTES VC JOIN VE_PERSONAS VP ON VP.PER_ID = VC.PER_ID ";
             try (PreparedStatement statement = conn.prepareStatement(query);
                  ResultSet resultSet = statement.executeQuery()) {
 
                 while (resultSet.next()) {
 
 
-                    String serNombre = resultSet.getString("per_nombre");
+                    String serNombre = resultSet.getString("PER_NOMBRE");
 
 
                     // Create a string representation of the employee details
@@ -1115,6 +1151,32 @@ public class Operaciones {
 
         return precio;
     }
+
+
+    public String obtenerEmailCliente(String cliente) {
+        String email = ""; // Default to 0 in case no result is found
+        String query = "SELECT PER_CORREO_ELECTRONICO FROM VE_PERSONAS WHERE PER_NOMBRE=?";
+
+        try (PreparedStatement statement = conn.prepareStatement(query)) {
+            // Set the parameter for the PreparedStatement
+            statement.setString(1, cliente);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    // Retrieve the price from the result set
+                    email = resultSet.getString("PER_CORREO_ELECTRONICO");
+                }
+            }
+            System.out.println(email);
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Handle the exception as needed
+        }
+
+        return email;
+    }
+
+
 }
 
 
