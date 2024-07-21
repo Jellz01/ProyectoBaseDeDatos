@@ -3,10 +3,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class formulariosIngresarPersona extends JFrame implements ActionListener {
     private JButton botGrabar;
     private JButton botCancelar;
+    public String opcion;
 
     public JTextField txtUsuario;
     public JTextField txtCon;
@@ -28,18 +30,17 @@ public class formulariosIngresarPersona extends JFrame implements ActionListener
     formulariosIngresarPersona(Operaciones op) throws SQLException {
         this.op = op;
         op.conectar();
+        opcion = "";
 
         super.setLayout(null);
 
         labDireccion = new JLabel("Direccion");
         labDireccion.setBounds(10,155,90,25);
-
         this.add(labDireccion);
 
         txtDir = new JTextField();
-        txtDir.setBounds(100,155,90,25);
+        txtDir.setBounds(100,155,200,25);
         this.add(txtDir);
-
 
         JLabel labCedula = new JLabel("Cédula:");
         labCedula.setBounds(10, 5, 90, 25);
@@ -52,26 +53,26 @@ public class formulariosIngresarPersona extends JFrame implements ActionListener
         labNombre.setBounds(10, 35, 90, 25);
         this.add(labNombre);
         txtNombre = new JTextField();
-        txtNombre.setBounds(100, 35, 150, 25);
+        txtNombre.setBounds(100, 35, 200, 25);
         this.add(txtNombre);
 
         JLabel labApellido = new JLabel("Apellido:");
         labApellido.setBounds(10, 65, 90, 25);
         this.add(labApellido);
         txtApellido = new JTextField();
-        txtApellido.setBounds(100, 65, 150, 25);
+        txtApellido.setBounds(100, 65, 200, 25);
         this.add(txtApellido);
 
-        JLabel labDireccion = new JLabel("Telefono:");
-        labDireccion.setBounds(10, 95, 90, 25);
-        this.add(labDireccion);
+        JLabel labTelefono = new JLabel("Telefono:");
+        labTelefono.setBounds(10, 95, 90, 25);
+        this.add(labTelefono);
         txtDireccion = new JTextField();
         txtDireccion.setBounds(100, 95, 200, 25);
         this.add(txtDireccion);
 
-        JLabel labSalario = new JLabel("Email:");
-        labSalario.setBounds(10, 125, 90, 25);
-        this.add(labSalario);
+        JLabel labEmail = new JLabel("Email:");
+        labEmail.setBounds(10, 125, 90, 25);
+        this.add(labEmail);
         txtSalario = new JTextField();
         txtSalario.setBounds(100, 125, 200, 25);
         this.add(txtSalario);
@@ -94,49 +95,49 @@ public class formulariosIngresarPersona extends JFrame implements ActionListener
 
         JLabel labelUsu = new JLabel("Usuario:");
         labelUsu.setSize(90, 25);
-        labelUsu.setLocation(10, 215);
+        labelUsu.setLocation(10, 225);
         this.add(labelUsu);
 
         txtUsuario = new JTextField();
         txtUsuario.setSize(200, 25);
-        txtUsuario.setLocation(100, 215);
+        txtUsuario.setLocation(100, 225);
         txtUsuario.setEnabled(false);
         this.add(txtUsuario);
 
         JLabel labCon = new JLabel("Contraseña:");
         labCon.setSize(90, 25);
-        labCon.setLocation(10, 245);
+        labCon.setLocation(10, 255);
         this.add(labCon);
 
         txtCon = new JTextField();
         txtCon.setSize(200, 25);
-        txtCon.setLocation(100, 245);
+        txtCon.setLocation(100, 255);
         txtCon.setEnabled(false);
         this.add(txtCon);
 
         JLabel labCon1 = new JLabel("Contraseña nuevamente:");
         labCon1.setSize(190, 25);
-        labCon1.setLocation(10, 275);
+        labCon1.setLocation(10, 285);
         this.add(labCon1);
 
         txtCon1 = new JTextField();
         txtCon1.setSize(200, 25);
-        txtCon1.setLocation(155, 275);
+        txtCon1.setLocation(155, 285);
         txtCon1.setEnabled(false);
         this.add(txtCon1);
 
         botGrabar = new JButton("Grabar");
-        botGrabar.setBounds(40, 305, 100, 25);
+        botGrabar.setBounds(40, 325, 100, 25);
         botGrabar.addActionListener(this);
         this.add(botGrabar);
 
         botCancelar = new JButton("Cancelar");
-        botCancelar.setBounds(150, 305, 100, 25);
+        botCancelar.setBounds(190, 325, 100, 25);
         botCancelar.addActionListener(this);
         this.add(botCancelar);
 
         super.setTitle("Empleados");
-        super.setSize(400, 350);
+        super.setSize(400, 450);
         super.setLocationRelativeTo(null);
         super.setResizable(false);
         super.setVisible(true);
@@ -144,25 +145,17 @@ public class formulariosIngresarPersona extends JFrame implements ActionListener
 
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == contratos) {
-            int numeroElegido = contratos.getSelectedIndex();
-            if (numeroElegido == 0) {
-               /* txtUsuario.setEnabled(true);
+             opcion = (String) contratos.getSelectedItem();
+            System.out.println(opcion);
+
+            if (Objects.equals(opcion, "atencion al cliente")) {
+                txtUsuario.setEnabled(true);
                 txtCon.setEnabled(true);
                 txtCon1.setEnabled(true);
-                */
-
-            } else {
-                /*
-                txtUsuario.setEnabled(false);
-                txtCon.setEnabled(false);
-                txtCon1.setEnabled(false);
-                */
-
             }
         }
 
         if (e.getSource() == botGrabar) {
-
             String cedula = txtCedula.getText();
             String nombre = txtNombre.getText();
             String apellido = txtApellido.getText();
@@ -170,7 +163,10 @@ public class formulariosIngresarPersona extends JFrame implements ActionListener
             String email = txtSalario.getText();
             String direccion = txtDir.getText();
 
-            boolean estado = op.agregarEmpleado(nombre, apellido,direccion, telefono, email,cedula );
+
+            boolean estado = op.agregarEmpleado(nombre, apellido, direccion, telefono, email, cedula,opcion);
+
+
 
             if (estado) {
                 this.setVisible(false);
@@ -183,6 +179,4 @@ public class formulariosIngresarPersona extends JFrame implements ActionListener
             this.setVisible(false);
         }
     }
-
-
 }

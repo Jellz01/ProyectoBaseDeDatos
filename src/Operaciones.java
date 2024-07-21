@@ -56,11 +56,11 @@ public class Operaciones {
         return state;
     }
 
-    public boolean agregarEmpleado(String cedula, String nombre, String apellido, String telefono, String direccion, String email) {
+    public boolean agregarPersona(String cedula, String nombre, String apellido, String telefono, String direccion, String email) {
         boolean state = false;
 
         try {
-            PreparedStatement sentencia = conn.prepareStatement("INSERT INTO VE_PERSONAS VALUES (SEQ_VE_PERSONAS.NEXTVAL,?,?,?,?,?,?)");
+            PreparedStatement sentencia = conn.prepareStatement("INSERT INTO VE_PERSONAS (per_id, per_nombre,per_apellido, per_direccion, per_telefono, per_correo_electronico,per_cedula) VALUES (SEQ_VE_PERSONAS.NEXTVAL,?,?,?,?,?,?)");
 
             sentencia.setString(1, nombre);
             sentencia.setString(2, apellido);
@@ -89,6 +89,99 @@ public class Operaciones {
 
         return state;
     }
+
+    public boolean agregarEmpleado(String cedula, String nombre, String apellido, String telefono, String direccion, String email, String tipConNombre) {
+        boolean state = false;
+
+        int tipConId = -1;
+        String perId = null;
+
+        // Obtener TIP_CON_ID basado en el nombre del contrato
+        String queryTipoContrato = "SELECT TIP_CON_ID FROM VE_TIPOS_CONTRATOS WHERE TIP_CON_NOMBRE = ?";
+        try (PreparedStatement sentenciaTipoContrato = conn.prepareStatement(queryTipoContrato)) {
+            sentenciaTipoContrato.setString(1, tipConNombre);
+
+            try (ResultSet rsTipoContrato = sentenciaTipoContrato.executeQuery()) {
+                if (rsTipoContrato.next()) {
+                    tipConId = rsTipoContrato.getInt("TIP_CON_ID");
+                    System.out.println("TIP_CON_ID: " + tipConId);
+                } else {
+                    System.out.println("No se encontró el tipo de contrato con el nombre: " + tipConNombre);
+                    return false; // Salir si no se encontró el tipo de contrato
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false; // Salir en caso de error con la consulta del tipo de contrato
+        }
+
+        // Obtener el siguiente valor de la secuencia SEQ_VE_PERSONAS
+        String querySecuencia = "SELECT SEQ_VE_PERSONAS.NEXTVAL AS NEXT_VAL FROM DUAL";
+        try (PreparedStatement sentenciaSecuencia = conn.prepareStatement(querySecuencia);
+             ResultSet rsSecuencia = sentenciaSecuencia.executeQuery()) {
+
+            if (rsSecuencia.next()) {
+                perId = rsSecuencia.getString("NEXT_VAL"); // Obtener el siguiente valor de la secuencia
+                System.out.println("PER_ID (sec): " + perId);
+            } else {
+                System.out.println("No se pudo obtener el valor de la secuencia.");
+                return false; // Salir si no se pudo obtener el valor de la secuencia
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false; // Salir en caso de error al obtener el valor de la secuencia
+        }
+
+        // Insertar en VE_PERSONAS usando el valor obtenido de la secuencia
+        String insertPersonaQuery = "INSERT INTO VE_PERSONAS (per_id, per_nombre, per_cedula, per_apellido, per_direccion, per_telefono, per_correo_electronico) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement sentenciaPersona = conn.prepareStatement(insertPersonaQuery)) {
+            sentenciaPersona.setString(1, perId); // Usar el valor de la secuencia
+            sentenciaPersona.setString(2, nombre);
+            sentenciaPersona.setString(3, cedula);
+            sentenciaPersona.setString(4, apellido);
+            sentenciaPersona.setString(5, direccion);
+            sentenciaPersona.setString(6,telefono);
+            sentenciaPersona.setString(7, email);
+
+            int rowsAffected = sentenciaPersona.executeUpdate();
+
+            if (rowsAffected > 0) {
+                // Insertar en VE_EMPLEADOS usando el mismo PER_ID
+                String insertEmpleadoQuery = "INSERT INTO VE_EMPLEADOS (EMP_ID, PER_ID, TIP_CON_ID) VALUES (SEQ_VE_EMPLEADOS.NEXTVAL, ?, ?)";
+                try (PreparedStatement sentenciaEmpleado = conn.prepareStatement(insertEmpleadoQuery)) {
+                    sentenciaEmpleado.setString(1, perId); // Usar el mismo valor de PER_ID
+                    sentenciaEmpleado.setInt(2, tipConId);
+
+                    int rowsAffectedEmpleado = sentenciaEmpleado.executeUpdate();
+
+                    if (rowsAffectedEmpleado > 0) {
+                        JOptionPane.showMessageDialog(null, "Se ingresó un empleado correctamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
+                        state = true;
+                    } else {
+                        JOptionPane.showMessageDialog(null, "No se ingresó un empleado en VE_EMPLEADOS. ERROR", "ERROR", JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (SQLIntegrityConstraintViolationException duplicateKeyException) {
+                    JOptionPane.showMessageDialog(null, "ERROR: Se ha intentado insertar un valor duplicado para la clave primaria en VE_EMPLEADOS.", "ERROR", JOptionPane.ERROR_MESSAGE);
+                    duplicateKeyException.printStackTrace();
+                } catch (SQLException ex) {
+                    Logger.getLogger(Operaciones.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            } else {
+                JOptionPane.showMessageDialog(null, "No se ingresó un empleado en VE_PERSONAS. ERROR", "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLIntegrityConstraintViolationException duplicateKeyException) {
+            JOptionPane.showMessageDialog(null, "ERROR: Se ha intentado insertar un valor duplicado para la clave primaria en VE_PERSONAS.", "ERROR", JOptionPane.ERROR_MESSAGE);
+            duplicateKeyException.printStackTrace();
+        } catch (SQLException ex) {
+            Logger.getLogger(Operaciones.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return state;
+    }
+
+
+
+
 
     public boolean agregarCliente(String cedula, String nombre, String apellido, String telefono, String direccion, String correoElectronico) {
         boolean state = false;
@@ -374,6 +467,31 @@ public class Operaciones {
         return idResultado;
     }
 
+    public int obtenerIDUsuario(String nombre) {
+        int idResultado = 0; // Initialize ID to 0 or any default value
+
+        try {
+            String query = "SELECT USU_ID FROM VE_USUARIOS WHERE USU_NOMBRE LIKE ?";
+            try (PreparedStatement statement = conn.prepareStatement(query)) {
+                statement.setString(1, nombre);
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+
+                        idResultado = resultSet.getInt("USU_ID");
+                        System.out.println("CACAC"+idResultado);
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Handle the exception as needed
+        }
+
+        return idResultado;
+    }
+
+
 
 
     public ArrayList<String> obtenerAnimalesTipos() {
@@ -420,27 +538,33 @@ public class Operaciones {
         ArrayList<String> empleadoList = new ArrayList<>();
 
         try {
-            String query = "SELECT * FROM VE_PERSONAS";
+            // Updated query to include PER_DIRECCION
+            String query = "SELECT e.EMP_ID, p.PER_NOMBRE, p.PER_APELLIDO, p.PER_CEDULA, p.PER_DIRECCION " +
+                    "FROM VE_EMPLEADOS e " +
+                    "JOIN VE_PERSONAS p ON e.PER_ID = p.PER_ID";
+
             try (PreparedStatement statement = conn.prepareStatement(query);
                  ResultSet resultSet = statement.executeQuery()) {
 
                 while (resultSet.next()) {
-
-                    String perID = resultSet.getString("PER_ID");
+                    String empID = resultSet.getString("EMP_ID");
                     String nombreResult = resultSet.getString("PER_NOMBRE");
                     String apellidoResult = resultSet.getString("PER_APELLIDO");
+                    String perCedula = resultSet.getString("PER_CEDULA");
                     String perDireccion = resultSet.getString("PER_DIRECCION");
-                    String perTelefono = resultSet.getString("PER_TELEFONO");
-                    String perEmail = resultSet.getString("PER_CORREO_ELECTRONICO");
-
 
                     // Create a string representation of the employee details
-                    String empleadoDetails = "Cedula: " + perID + ", Nombre: " + nombreResult +
-                            ", Apellido: " + apellidoResult + ", Telefono: " + perTelefono +
-                            ", Direccion: " + perDireccion + ", perEmail: " + perEmail;
+                    String empleadoDetails = "EMP_ID: " + empID +
+                            ", Nombre: " + nombreResult +
+                            ", Apellido: " + apellidoResult +
+                            ", Cedula: " + perCedula +
+                            ", Direccion: " + perDireccion;
 
                     empleadoList.add(empleadoDetails);
                 }
+
+                // Print the list after the loop
+                System.out.println(empleadoList);
             }
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -448,7 +572,6 @@ public class Operaciones {
         }
 
         return empleadoList;
-
     }
 
 
@@ -950,18 +1073,22 @@ public class Operaciones {
     }
 
 
-    public boolean ingresarFacturaCabecera(int num, String numfac, String fecha, int subtotal, int iva, int facTotal) {
+    public boolean ingresarFacturaCabecera(int id, String num, String fecha, float subtotal, float iva, float total, int cliId, int usuId) {
         boolean state = false;
 
         try {
-            PreparedStatement sentencia = conn.prepareStatement("INSERT INTO VE_CABECERA_FACTURAS VALUES (?, ?, TO_DATE(?, 'YYYY-MM-DD'), ?, ?, ?)");
+            // SQL query using TO_DATE to format the date in 'YYYY-MM-DD'
+            String sql = "INSERT INTO VE_CABECERA_FACTURAS (CAB_FAC_ID, CAB_FAC_NUMERO, CAB_FAC_FECHA, CAB_FAC_SUBTOTAL, CAB_FAC_IVA, CAB_FAC_VALOR_TOTAL, CLI_ID, USU_ID) VALUES (?, ?, TO_DATE(?, 'YYYY-MM-DD'), ?, ?, ?, ?, ?)";
+            PreparedStatement sentencia = conn.prepareStatement(sql);
 
-            sentencia.setInt(1, num);
-            sentencia.setString(2, numfac);
-            sentencia.setString(3, fecha); // Assuming fecha is in format "DD-MM-YYYY"
-            sentencia.setInt(4, subtotal);
-            sentencia.setInt(5, iva);
-            sentencia.setInt(6, facTotal);
+            sentencia.setInt(1, id);
+            sentencia.setString(2, num);
+            sentencia.setString(3, fecha); // No need to convert date format, it's already in 'YYYY-MM-DD'
+            sentencia.setFloat(4, subtotal);
+            sentencia.setFloat(5, iva);
+            sentencia.setFloat(6, total);
+            sentencia.setInt(7, cliId);
+            sentencia.setInt(8, usuId);
 
             int rowsAffected = sentencia.executeUpdate();
 
@@ -979,6 +1106,7 @@ public class Operaciones {
 
         return state;
     }
+
 
     public boolean eliminarCliente(String nombre) {
         boolean state = false;
@@ -1064,27 +1192,30 @@ public class Operaciones {
         ArrayList<String> listaClientes = new ArrayList<>();
 
         try {
-            String query = "SELECT * FROM VE_PERSONAS";
+            // Correct the query to select all necessary columns
+            String query = "SELECT vp.per_id, vp.per_nombre, vp.per_apellido, vp.per_direccion, vp.per_telefono, vp.per_correo_electronico " +
+                    "FROM VE_PERSONAS vp " +
+                    "JOIN VE_EMPLEADOS vee ON vp.per_id = vee.per_id " +
+                    "ORDER BY vp.per_nombre";
+
             try (PreparedStatement statement = conn.prepareStatement(query);
                  ResultSet resultSet = statement.executeQuery()) {
 
                 while (resultSet.next()) {
+                    // Retrieve the values from the result set
+                    String perId = resultSet.getString("per_id");
+                    String perNombre = resultSet.getString("per_nombre");
+                    String perApellido = resultSet.getString("per_apellido");
+                    String perDireccion = resultSet.getString("per_direccion");
+                    String perTelefono = resultSet.getString("per_telefono");
+                    String perCorreo = resultSet.getString("per_correo_electronico");
 
-                    String serId = resultSet.getString("PER_ID");
-                    String serNombre = resultSet.getString("PER_NOMBRE");
-                    String serApellido = resultSet.getString("PER_APELLIDO");
-                    String serDireccion = resultSet.getString("PER_DIRECCION");
-                    String serTelefono = resultSet.getString("PER_TELEFONO");
-                    String sercorreo = resultSet.getString("PER_CORREO_ELECTRONICO");
+                    // Create a string representation of the client details
+                    String datosCliente = "ID: " + perId + ", Nombre: " + perNombre +
+                            ", Apellido: " + perApellido + ", Direccion: " + perDireccion +
+                            ", Telefono: " + perTelefono + ", Correo: " + perCorreo;
 
-
-                    // Create a string representation of the employee details
-                    String datosServico = "id: " + serId + ", nombre: " + serNombre +
-                            ", Apellido: " + serApellido + ", Direccion: " + serDireccion +
-                            ", telefono: " + serTelefono + ", correo: " + sercorreo;
-
-                    listaClientes.add(datosServico);
-                    System.out.println(listaClientes);
+                    listaClientes.add(datosCliente);
                 }
             }
         } catch (SQLException ex) {
@@ -1093,7 +1224,6 @@ public class Operaciones {
         }
 
         return listaClientes;
-
     }
 
 

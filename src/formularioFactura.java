@@ -198,13 +198,30 @@ public class formularioFactura extends JFrame implements ActionListener {
             properties.put("mail.smtp.port", "587");
             SendEmail sm = new SendEmail(properties,email);
 
-
             String num = txtNum.getText();
             int numm = Integer.parseInt(num);
             String fechaa = txtFecha.getText();
             String subt = txtSubT.getText();
             String iva = txtIva.getText();
             String totalF = txtTotal.getText();
+
+            // Manejo del JComboBox usuarios
+            String selectedUsuario = (String) usuarios.getSelectedItem();
+            System.out.println(selectedUsuario);
+            int usuarioId = op.obtenerIDUsuario(selectedUsuario);
+            System.out.println(usuarioId);
+
+
+
+
+
+            // Manejo del JComboBox clientes
+            String clienteSelec = (String) clientes.getSelectedItem();
+            int clienteIdSelec = op.obtenerIDCliente(clienteSelec);
+            System.out.println(clienteIdSelec);
+
+
+
 
             float subTT = 0;
             float IVA = 0;
@@ -217,7 +234,7 @@ public class formularioFactura extends JFrame implements ActionListener {
                 ex.printStackTrace();
             }
 
-            boolean estado = op.ingresarFacturaCabecera(numm, num, fechaa, (int) subTT, (int) IVA, (int) factT);
+            boolean estado =  op.ingresarFacturaCabecera(numm, num, fechaa, (int) subTT, (int) IVA, (int) factT,clienteIdSelec,usuarioId);
             if (estado) {
                 JOptionPane.showMessageDialog(this, "Factura ingresada correctamente.");
                 this.setVisible(false);
