@@ -295,6 +295,23 @@ public class Operaciones {
         return state;
     }
 
+    public boolean verificarExistencia(int clienteId, int empleadoId, int mascotaId) throws SQLException {
+        String query = "SELECT 1 FROM VE_CLIENTES WHERE CLI_ID = ? UNION ALL " +
+                "SELECT 1 FROM EMPLEADOS WHERE EMP_ID = ? UNION ALL " +
+                "SELECT 1 FROM MASCOTAS WHERE MAS_ID = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, clienteId);
+            stmt.setInt(2, empleadoId);
+            stmt.setInt(3, mascotaId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                // Verificar que al menos una fila existe en los resultados
+                return rs.next();
+            }
+        }
+    }
+
+
     public boolean agregarTipoAnimal(String tipo) {
         boolean state = false;
 
@@ -420,26 +437,24 @@ public class Operaciones {
         return state;
     }
 
-    public boolean eliminarCita(int Id) {
+    public boolean eliminarCita(int id) {
         boolean state = false;
 
-        try {
-            String query = "UPDATE VE_CITAS SET CIT_ESTADO = 'CANCELADO' WHERE CIT_ID = 2";
-            try (PreparedStatement sentencia = conn.prepareStatement(query)) {
-                sentencia.setInt(1, Id);
+        String query = "UPDATE VE_CITAS SET CIT_ESTADO = 'CANCELADO' WHERE CIT_ID = ?";
+        try (PreparedStatement sentencia = conn.prepareStatement(query)) {
+            sentencia.setInt(1, id);
 
-                int rowsAffected = sentencia.executeUpdate();
+            int rowsAffected = sentencia.executeUpdate();
 
-                if (rowsAffected > 0) {
-                    JOptionPane.showMessageDialog(null, "Cita cancelada correctamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
-                    state = true;
-                } else {
-                    JOptionPane.showMessageDialog(null, "cita no eliminada", "ERROR", JOptionPane.ERROR_MESSAGE);
-                }
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(null, "Cita cancelada correctamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
+                state = true;
+            } else {
+                JOptionPane.showMessageDialog(null, "No se encontró la cita para cancelar", "ERROR", JOptionPane.ERROR_MESSAGE);
             }
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            // Handle the exception as needed
+            ex.printStackTrace(); // Consider logging the exception
+            JOptionPane.showMessageDialog(null, "Error al intentar cancelar la cita", "ERROR", JOptionPane.ERROR_MESSAGE);
         }
 
         return state;
@@ -468,19 +483,48 @@ public class Operaciones {
         return idResultado;
     }
 
-    public int obtenerIDCliente(String nombre) {
+    public int obtenerIDCliente(String cliente) {
+        // Assuming `cliente` has the format "Nombre Apellido"
+        // Split the string by space and take the first part
+        String nombre = cliente.split(" ")[0];
+
+        int idResultado = 10; // Default value or use another sentinel value
+
+        try {
+            String query = "SELECT PER_ID FROM VE_PERSONAS WHERE PER_NOMBRE = ?";
+            try (PreparedStatement statement = conn.prepareStatement(query)) {
+                statement.setString(1, nombre);
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        idResultado = resultSet.getInt("PER_ID");
+                        System.out.println("ID encontrado: " + idResultado);
+                    } else {
+                        System.out.println("No se encontró ningún registro con el nombre: " + nombre);
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Handle the exception as needed
+        }
+
+        return idResultado;
+    }
+
+    public int obtenerIDmascota(String nombre) {
         int idResultado = 0; // Initialize ID to 0 or any default value
 
         try {
-            String query = "SELECT PER_ID FROM VE_PERSONAS WHERE PER_NOMBRE  = ?";
+            String query = "SELECT MAS_ID FROM VE_TIPO_MASCOTAS WHERE MAS_NOMBRE  = ?";
             try (PreparedStatement statement = conn.prepareStatement(query)) {
                 statement.setString(1, nombre);
 
                 try (ResultSet resultSet = statement.executeQuery()) {
                     if (resultSet.next()) {
 
-                        idResultado = resultSet.getInt("PER_ID");
-                        System.out.println("CACAC"+idResultado);
+                        idResultado = resultSet.getInt("MAS_ID");
+
                     }
                 }
             }
@@ -1056,6 +1100,36 @@ public class Operaciones {
 
                     // Create a string representation of the appointment details
                     String datosCita = "ID: " + citaId + ", Perro: " + nombrePerro + ", Fecha: " + fechaCita;
+
+                    // Add the string representation to the list
+                    listaCitas.add(datosCita);
+                    System.out.println(datosCita);
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Handle the exception as needed
+        }
+
+        return listaCitas;
+    }
+
+    public ArrayList<String> obtenerCitass() {
+        ArrayList<String> listaCitas = new ArrayList<>();
+
+        try {
+            String query = "SELECT c.CIT_ID AS Cita_ID, c.CIT_NOMBRE_MASCOTA AS Nombre_Perro, TO_CHAR(c.CIT_FECHA_HORA, 'DD-MON-YY HH24:MI:SS') AS Fecha_Cita FROM VE_CITAS c";
+            try (PreparedStatement statement = conn.prepareStatement(query);
+                 ResultSet resultSet = statement.executeQuery()) {
+
+                while (resultSet.next()) {
+                    // Retrieve data from the result set
+                    String citaId = resultSet.getString("Cita_ID");
+                    String nombrePerro = resultSet.getString("Nombre_Perro");
+                    String fechaCita = resultSet.getString("Fecha_Cita");
+
+                    // Create a string representation of the appointment details
+                    String datosCita = citaId + " " + nombrePerro ;
 
                     // Add the string representation to the list
                     listaCitas.add(datosCita);
