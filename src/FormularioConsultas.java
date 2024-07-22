@@ -1,6 +1,9 @@
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 
 public class FormularioConsultas extends JFrame implements ActionListener {
 
@@ -37,7 +40,7 @@ public class FormularioConsultas extends JFrame implements ActionListener {
         labelTipoMascota.setBounds(50, 100, 150, 30);
         labelVeterinario.setBounds(50, 150, 150, 30);
         labelNombreMascota.setBounds(50, 200, 150, 30);
-        labelFecha.setBounds(50, 250, 150, 30);
+        labelFecha.setBounds(50, 250, 250, 30);
         labelHora.setBounds(50, 300, 150, 30);
 
         // Inicialización de los JComboBox
@@ -52,8 +55,29 @@ public class FormularioConsultas extends JFrame implements ActionListener {
         // Campos de texto
         campoNombreMascota = new JTextField();
         campoNombreMascota.setBounds(200, 200, 200, 30);
-        campoFecha = new JTextField();
+
+        // Campo de fecha con texto temporal
+        campoFecha = new JTextField("YYYY-MM-DD");
         campoFecha.setBounds(200, 250, 200, 30);
+        campoFecha.setForeground(Color.GRAY);
+        campoFecha.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (campoFecha.getText().equals("YYYY-MM-DD")) {
+                    campoFecha.setText("");
+                    campoFecha.setForeground(Color.BLACK);
+                }
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (campoFecha.getText().isEmpty()) {
+                    campoFecha.setText("YYYY-MM-DD");
+                    campoFecha.setForeground(Color.GRAY);
+                }
+            }
+        });
+
         campoHora = new JTextField();
         campoHora.setBounds(200, 300, 200, 30);
 

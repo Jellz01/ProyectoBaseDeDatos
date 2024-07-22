@@ -86,23 +86,23 @@ public class formularioConsulta extends JFrame implements ActionListener {
             veterinarios.addItem(veterinario);
         }
 
-        JLabel labFecha = new JLabel("Fecha:");
-        labFecha.setBounds(10, 130, 140, 25);
+        JLabel labFecha = new JLabel("Fecha (YYYY-MM-DD):");
+        labFecha.setBounds(10, 130, 240, 25);
         this.add(labFecha);
 
         txtFecha = new JTextField();
         txtFecha.setSize(120,25);
-        txtFecha.setLocation(100,130);
+        txtFecha.setLocation(150,130);
         this.add(txtFecha);
 
 
-        JLabel labHora = new JLabel("Hora:");
-        labHora.setBounds(10, 160, 140, 25);
+        JLabel labHora = new JLabel("Hora (HH:MM):");
+        labHora.setBounds(10, 160, 240, 25);
         this.add(labHora);
 
         txtHora = new JTextField();
         txtHora.setSize(120,25);
-        txtHora.setLocation(100,160);
+        txtHora.setLocation(150,160);
         this.add(txtHora);
 
 
@@ -164,6 +164,10 @@ public class formularioConsulta extends JFrame implements ActionListener {
                 System.out.println("Fecha y Hora: " + fechaHora);
 
                 boolean estado = op.agregarCita(nombreMascota, fechaHora, estadoo, 1, empleadoI, 1);
+
+                if(estado == true){
+                    this.setVisible(false);
+                }
 
             } catch (ParseException ex) {
                 System.err.println("Error en el formato de fecha o hora: " + ex.getMessage());

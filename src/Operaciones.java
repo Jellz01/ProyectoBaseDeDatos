@@ -420,6 +420,31 @@ public class Operaciones {
         return state;
     }
 
+    public boolean eliminarCita(int Id) {
+        boolean state = false;
+
+        try {
+            String query = "UPDATE VE_CITAS SET CIT_ESTADO = 'CANCELADO' WHERE CIT_ID = 2";
+            try (PreparedStatement sentencia = conn.prepareStatement(query)) {
+                sentencia.setInt(1, Id);
+
+                int rowsAffected = sentencia.executeUpdate();
+
+                if (rowsAffected > 0) {
+                    JOptionPane.showMessageDialog(null, "Cita cancelada correctamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
+                    state = true;
+                } else {
+                    JOptionPane.showMessageDialog(null, "cita no eliminada", "ERROR", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Handle the exception as needed
+        }
+
+        return state;
+    }
+
     public int obtenerIDVeterinario(String nombre) {
         int idResultado = 0; // Initialize ID to 0 or any default value
 
@@ -579,35 +604,28 @@ public class Operaciones {
     public ArrayList<String> obtenerTodosLasCitas() {
         ArrayList<String> listaCitas = new ArrayList<>();
 
-        try {
-            String query = "SELECT * FROM VE_PERSONAS";
-            try (PreparedStatement statement = conn.prepareStatement(query);
-                 ResultSet resultSet = statement.executeQuery()) {
+        String query = "SELECT c.CIT_ID, c.CIT_NOMBRE_MASCOTA, c.CIT_FECHA_HORA, c.CIT_ESTADO, p.PER_NOMBRE AS EMPLEADO_NOMBRE " +
+                "FROM VE_CITAS c " +
+                "JOIN VE_EMPLEADOS e ON c.EMP_ID = e.EMP_ID " +
+                "JOIN VE_PERSONAS p ON e.PER_ID = p.PER_ID";
 
-                while (resultSet.next()) {
+        try (PreparedStatement statement = conn.prepareStatement(query);
+             ResultSet resultSet = statement.executeQuery()) {
 
-                    String citID = resultSet.getString("CIT_ID");
-                    String nombreMascota = resultSet.getString("CIT_NOMBRE_MASCOTA");
-                    String fechaHora = resultSet.getString("CIT_FECHA_HORA");
-                    String citEstado = resultSet.getString("CIT_ESTADO");
-                    String idCli = resultSet.getString("CLI_ID");
-                    String idEmp = resultSet.getString("EMP_ID");
-                    String idMas = resultSet.getString("MAS_ID");
+            while (resultSet.next()) {
+                String citID = resultSet.getString("CIT_ID");
+                String nombreMascota = resultSet.getString("CIT_NOMBRE_MASCOTA");
+                String fechaHora = resultSet.getString("CIT_FECHA_HORA");
+                String citEstado = resultSet.getString("CIT_ESTADO");
+                String empleadoNombre = resultSet.getString("EMPLEADO_NOMBRE");
 
+                String citaDetails = "ID: " + citID +
+                        ", Nombre Mascota: " + nombreMascota +
+                        ", Fecha y Hora: " + fechaHora +
+                        ", Estado: " + citEstado +
+                        ", Empleado: " + empleadoNombre;
 
-                    // Suponiendo que citID, nombreMascota, fechaHora, citEstado, idCli, idEmp, idMas son variables correctamente definidas y asignadas
-
-                    String empleadoDetails = "Cedula: " + citID +
-                            ", Nombre: " + nombreMascota +
-                            ", Apellido: " + fechaHora +
-                            ", Telefono: " + citEstado +
-                            ", Direccion: " + idCli +
-                            ", perEmail: " + idEmp +
-                            ", permail: " + idMas;
-
-                    listaCitas.add(empleadoDetails);
-
-                }
+                listaCitas.add(citaDetails);
             }
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -615,7 +633,6 @@ public class Operaciones {
         }
 
         return listaCitas;
-
     }
 
 
@@ -1021,6 +1038,36 @@ public class Operaciones {
 
         return listaClientes;
 
+    }
+
+    public ArrayList<String> obtenerCitas() {
+        ArrayList<String> listaCitas = new ArrayList<>();
+
+        try {
+            String query = "SELECT c.CIT_ID AS Cita_ID, c.CIT_NOMBRE_MASCOTA AS Nombre_Perro, TO_CHAR(c.CIT_FECHA_HORA, 'DD-MON-YY HH24:MI:SS') AS Fecha_Cita FROM VE_CITAS c";
+            try (PreparedStatement statement = conn.prepareStatement(query);
+                 ResultSet resultSet = statement.executeQuery()) {
+
+                while (resultSet.next()) {
+                    // Retrieve data from the result set
+                    String citaId = resultSet.getString("Cita_ID");
+                    String nombrePerro = resultSet.getString("Nombre_Perro");
+                    String fechaCita = resultSet.getString("Fecha_Cita");
+
+                    // Create a string representation of the appointment details
+                    String datosCita = "ID: " + citaId + ", Perro: " + nombrePerro + ", Fecha: " + fechaCita;
+
+                    // Add the string representation to the list
+                    listaCitas.add(datosCita);
+                    System.out.println(datosCita);
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Handle the exception as needed
+        }
+
+        return listaCitas;
     }
 
 

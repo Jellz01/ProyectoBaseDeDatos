@@ -98,9 +98,15 @@ public class ControlerMenuPrincipal {
                 break;
 
             case 17:
+                try {
+                    ListarConsultas lcc = new ListarConsultas(op);
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
                 break;
 
             case 18:
+                cancelarCita ccc = new cancelarCita(op);
                 break;
 
             case 19:

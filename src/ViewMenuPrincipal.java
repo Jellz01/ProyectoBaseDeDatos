@@ -11,6 +11,8 @@ public class ViewMenuPrincipal extends JFrame implements ActionListener {
 
     private JMenuBar menu;
 
+    JMenuItem ModificarCitas;
+
     private JMenu servicios;
     private JMenu clientes;
     private JMenu empleados;
@@ -180,16 +182,19 @@ public class ViewMenuPrincipal extends JFrame implements ActionListener {
         citas = new JMenu("Citas");
         ingresoCita = new JMenuItem("Ingresar");
         ingresoCita.addActionListener(this);
-        ModificarCita = new JMenuItem("Modificar");
+        ModificarCita = new JMenuItem("listar");
         ModificarCita.addActionListener(this);
-        borrarCita = new JMenuItem("Borrar");
-        borrarCita.addActionListener(this);
-        listarFCita = new JMenuItem("Listar");
-        listarFCita.addActionListener(this);
+        ModificarCitas = new JMenuItem("Cancelar");
+        ModificarCitas.addActionListener(this);
+
+
+
+
         citas.add(ingresoCita);
+
         citas.add(ModificarCita);
-        citas.add(borrarFactura);
-        citas.add(listarFacturas);
+        citas.add(ModificarCitas);
+
 
         servicios = new JMenu("Servicios");
         ingresoServicio = new JMenuItem("Ingresar");
@@ -306,8 +311,9 @@ public class ViewMenuPrincipal extends JFrame implements ActionListener {
             ControlerMenuPrincipal cmp = new ControlerMenuPrincipal(17,vmp);
 
         }
-        else if (e.getSource() == borrarCita){
+        else if (e.getSource() == ModificarCitas){
             ControlerMenuPrincipal cmp = new ControlerMenuPrincipal(18,vmp);
+            System.out.println("nkk");
 
         }
         else if (e.getSource() == listarFCita){

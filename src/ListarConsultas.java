@@ -17,16 +17,14 @@ public class ListarConsultas extends JFrame implements ActionListener {
     private JRadioButton finInicio;
 
     // ATRIBUTOS PARA LA TABLA
-    private final String[] nombresColumnas = {"ID", "Nombre Mascota", "Fecha-Hora", "Estado", "Cliente ID", "Empleado ID", "Mascota ID"};
+    private final String[] nombresColumnas = {"ID", "Nombre Mascota", "Fecha-Hora", "Estado", "Empleado Nombre"};
     private JTable tabla;
     private JScrollPane scrollDatos;
 
     private Operaciones op;
-    private ArrayList<String> listaContratos; // Asumiendo que necesitas esta lista para los contratos
 
     public ListarConsultas(Operaciones op) throws SQLException {
         this.op = op;
-        this.listaContratos = listaContratos;
         op.conectar();
         super.setLayout(new BorderLayout());
 
@@ -45,24 +43,16 @@ public class ListarConsultas extends JFrame implements ActionListener {
 
         // Obtener los datos de las citas
         ArrayList<String> citaList = op.obtenerTodosLasCitas();
-        Object[][] datos = new Object[citaList.size()][7]; // Ajustar el tamaño según el número de columnas
+        Object[][] datos = new Object[citaList.size()][5]; // Ajustar el tamaño según el número de columnas
 
         for (int i = 0; i < citaList.size(); i++) {
             String[] citaDetails = citaList.get(i).split(", ");
-            if (citaDetails.length >= 7) { // Asegurarse de que hay suficientes detalles
+            if (citaDetails.length >= 5) { // Asegurarse de que hay suficientes detalles
                 datos[i][0] = citaDetails[0].split(": ")[1]; // ID
-                datos[i][1] = citaDetails[1].split(": ")[1]; // Nombre
+                datos[i][1] = citaDetails[1].split(": ")[1]; // Nombre Mascota
                 datos[i][2] = citaDetails[2].split(": ")[1]; // Fecha-Hora
                 datos[i][3] = citaDetails[3].split(": ")[1]; // Estado
-                datos[i][4] = citaDetails[4].split(": ")[1]; // Cliente ID
-                datos[i][5] = citaDetails[5].split(": ")[1]; // Empleado ID
-                datos[i][6] = citaDetails[6].split(": ")[1]; // Mascota ID
-
-                // Verificar y asignar tipo de contrato
-                String contrato = citaDetails[5].split(": ")[1];
-                if (Integer.parseInt(contrato) >= 1 && Integer.parseInt(contrato) <= listaContratos.size()) {
-                    datos[i][5] = listaContratos.get(Integer.parseInt(contrato) - 1);
-                }
+                datos[i][4] = citaDetails[4].split(": ")[1]; // Empleado Nombre
             }
         }
 
