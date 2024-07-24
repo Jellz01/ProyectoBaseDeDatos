@@ -148,6 +148,7 @@ public class FormularioServicio extends JFrame implements ActionListener {
             else{
                 estadoo = "Desactivado";
             }
+            estadoo = "Desactivado";
             boolean cerrar = op.agregarServicio(codigo,nombre,precio,iva,estadoo);
             if(cerrar==true){
                 this.setVisible(false);

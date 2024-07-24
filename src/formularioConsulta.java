@@ -155,21 +155,21 @@ public class formularioConsulta extends JFrame implements ActionListener {
                 String estadoo = "Scheduled";
                 String empleado = (String) veterinarios.getSelectedItem();
                 int empleadoI = (Integer) op.obtenerIDVeterinario(empleado);
-                System.out.println("empleado "+empleadoI);
+                System.out.println(empleadoI);
 
                 String cliente = (String) clientes.getSelectedItem();
                 int clienteI = op.obtenerIDCliente(cliente);
-                System.out.println("clinete: "+clienteI);
+                System.out.println(clienteI);
 
 
-                System.out.println("Fecha y Hora: " + fechaHora);
+                System.out.println( fechaHora);
 
 
                 String nombreAn = (String)tipos.getSelectedItem();
                 int mascotaId  = op.obtenerIDmascota(nombreAn);
-                System.out.println("Mascota: "+mascotaId);
+                System.out.println(mascotaId);
 
-                boolean estado = op.agregarCita(nombreMascota, fechaHora, estadoo, clienteI, empleadoI,mascotaId );
+                boolean estado = op.agregarCita(nombreMascota, fechaHora, estadoo,clienteI ,empleadoI,2);
 
 
                 if(estado == true){

@@ -164,7 +164,12 @@ public class formulariosIngresarPersona extends JFrame implements ActionListener
             String direccion = txtDir.getText();
 
 
-            boolean estado = op.agregarEmpleado(nombre, apellido, direccion, telefono, email, cedula,opcion);
+            boolean estado = op.agregarEmpleado(cedula, nombre, apellido, telefono, direccion, email,opcion);
+            int empId = op.obtenerIDEmpleado(nombre);
+            String usuario = txtUsuario.getText();
+            String contrasena = txtCon.getText();
+            op.agregarUsuario(empId,usuario,contrasena,opcion);
+            System.out.println(empId);
 
 
 

@@ -16,7 +16,7 @@ public class borrarServicios extends JFrame implements ActionListener {
         this.op=op;
         op.conectar();
 
-        this.setSize(350,190);
+        this.setSize(450,190);
         this.setLayout(null);
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
         this.setTitle("Borrar Servicios");
@@ -43,15 +43,15 @@ public class borrarServicios extends JFrame implements ActionListener {
         labServicos.setLocation(20,40);
         this.add(labServicos);
 
-        cancelar = new JButton("finalizar");
+        cancelar = new JButton("Cancelar");
         cancelar.setSize(120,25);
         cancelar.setLocation(40,100);
         cancelar.addActionListener(this);
 
         this.add(cancelar);
 
-        borrar = new JButton("Cancelar cita");
-        borrar.setSize(140,25);
+        borrar = new JButton("Borrar (Desactivar)");
+        borrar.setSize(220,25);
         borrar.setLocation(180,100);
         borrar.addActionListener(this);
 
@@ -71,9 +71,9 @@ public class borrarServicios extends JFrame implements ActionListener {
 
         if(e.getSource() == borrar){
 
-            int id = (int) servicios.getSelectedItem();
-            System.out.println(id);
-            boolean estado = op.eliminarCita(id);
+            String servicio = (String) servicios.getSelectedItem();
+            System.out.println(servicio);
+            boolean estado = op.eliminarServicio(servicio);
             if(estado=true){
                 this.setVisible(false);
             }

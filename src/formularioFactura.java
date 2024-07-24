@@ -7,6 +7,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Properties;
 
+import static java.lang.Integer.parseInt;
+
 public class formularioFactura extends JFrame implements ActionListener {
 
     private JButton botGrabar;
@@ -26,6 +28,8 @@ public class formularioFactura extends JFrame implements ActionListener {
     public JComboBox<String> clientes;
     public JComboBox<String> servicios;
     public JComboBox<String> usuarios;
+
+    private int precioUnitario = 0; // Precio unitario inicial
 
     public formularioFactura(Operaciones op) {
         this.op = op;
@@ -83,6 +87,7 @@ public class formularioFactura extends JFrame implements ActionListener {
         txtSubT = new JTextField();
         txtSubT.setBounds(100, 185, 200, 25);
         txtSubT.setText("0");
+        txtSubT.setEditable(false); // Make it non-editable
         this.add(txtSubT);
 
         JLabel labSalario = new JLabel("IVA 15%:");
@@ -109,14 +114,14 @@ public class formularioFactura extends JFrame implements ActionListener {
         servicios = new JComboBox<>();
         servicios.setSize(120, 25);
         servicios.setLocation(100, 125);
-        servicios.addActionListener(this);
         ArrayList<String> listaServicios = op.obtenerServiciosCombo();
         for (String servicio : listaServicios) {
             servicios.addItem(servicio);
         }
+        servicios.addActionListener(this);
         this.add(servicios);
 
-        JLabel labCant = new JLabel("Cantidad");
+        JLabel labCant = new JLabel("Cantidad:");
         labCant.setBounds(10, 155, 90, 25);
         this.add(labCant);
 
@@ -125,19 +130,14 @@ public class formularioFactura extends JFrame implements ActionListener {
         txtCant.setLocation(100, 155);
         this.add(txtCant);
 
-
-        String precioUni = String.valueOf(op.obtenerPrecioUnitario(servicios.getName()));
-        System.out.println(precioUni);
-
         JLabel labPU = new JLabel("Precio por 1:");
         labPU.setBounds(10, 215, 90, 25);
         this.add(labPU);
 
         txtPrecioU = new JTextField();
-        txtPrecioU.setText(precioUni);
+        txtPrecioU.setText(String.valueOf(precioUnitario));
         txtPrecioU.setSize(200, 25);
         txtPrecioU.setLocation(100, 215);
-
         txtPrecioU.setEnabled(false);
         this.add(txtPrecioU);
 
@@ -157,33 +157,65 @@ public class formularioFactura extends JFrame implements ActionListener {
         super.setResizable(false);
         super.setVisible(true);
 
-        txtSubT.getDocument().addDocumentListener(new DocumentListener() {
+        txtCant.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
-                updateSalario();
+                updateSubtotalAndTotal();
             }
 
             @Override
             public void removeUpdate(DocumentEvent e) {
-                updateSalario();
+                updateSubtotalAndTotal();
             }
 
             @Override
             public void changedUpdate(DocumentEvent e) {
-                updateSalario();
+                updateSubtotalAndTotal();
+            }
+        });
+
+        servicios.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String nombreServicio = (String) servicios.getSelectedItem();
+                if (nombreServicio != null && !nombreServicio.isEmpty()) {
+                    precioUnitario = op.obtenerPrecioUnitario(nombreServicio);
+                    txtPrecioU.setText(String.valueOf(precioUnitario));
+                    updateSubtotalAndTotal(); // Recalcular el subtotal y total al cambiar el servicio
+                } else {
+                    precioUnitario = 0; // Valor por defecto
+                    txtPrecioU.setText("0");
+                    txtTotal.setText("0");
+                    txtSubT.setText("0");
+                }
             }
         });
     }
 
-    private void updateSalario() {
+    public void updateSubtotalAndTotal() {
         try {
-            float valorT = Float.parseFloat(txtSubT.getText());
-            float valorCI = valorT * 0.15f;
-            float valorTT = valorT * 1.15f;
-            txtTotal.setText(String.valueOf(valorTT));
-            txtIva.setText(String.valueOf(valorCI));
+            int cantidad = parseInt(txtCant.getText());
+            float subtotal = cantidad * precioUnitario;
+            txtSubT.setText(String.format("%.2f", subtotal));
+            updateTotal(); // Actualizar total e IVA
         } catch (NumberFormatException ex) {
-            txtSubT.setText("0.0");
+            txtSubT.setText("0");
+            txtTotal.setText("0");
+            txtIva.setText("0");
+        }
+    }
+
+    private void updateTotal() {
+        try {
+            float subtotal = Float.parseFloat(txtSubT.getText());
+            float iva = subtotal * 0.15f;
+            float total = subtotal + iva;
+            txtIva.setText(String.format("%.2f", iva));
+            txtTotal.setText(String.format("%.2f", total));
+        } catch (NumberFormatException ex) {
+            txtSubT.setText("0");
+            txtIva.setText("0");
+            txtTotal.setText("0");
         }
     }
 
@@ -196,59 +228,42 @@ public class formularioFactura extends JFrame implements ActionListener {
             properties.put("mail.smtp.starttls.enable", "true");
             properties.put("mail.smtp.host", "smtp.gmail.com");
             properties.put("mail.smtp.port", "587");
-            SendEmail sm = new SendEmail(properties,email);
+            SendEmail sm = new SendEmail(properties, email);
 
             String num = txtNum.getText();
-            int numm = Integer.parseInt(num);
-            String fechaa = txtFecha.getText();
+            int numFactura = parseInt(num);
+            String fecha = txtFecha.getText();
             String subt = txtSubT.getText();
             String iva = txtIva.getText();
             String totalF = txtTotal.getText();
 
-            // Manejo del JComboBox usuarios
             String selectedUsuario = (String) usuarios.getSelectedItem();
-            System.out.println(selectedUsuario);
             int usuarioId = op.obtenerIDUsuario(selectedUsuario);
-            System.out.println(usuarioId);
 
-
-
-
-
-            // Manejo del JComboBox clientes
             String clienteSelec = (String) clientes.getSelectedItem();
             int clienteIdSelec = op.obtenerIDCliente(clienteSelec);
-            System.out.println(clienteIdSelec);
 
-
-
-
-            float subTT = 0;
+            float subtotal = 0;
             float IVA = 0;
-            float factT = 0;
+            float totalFactura = 0;
             try {
-                subTT = Float.parseFloat(subt);
+                subtotal = Float.parseFloat(subt);
                 IVA = Float.parseFloat(iva);
-                factT = Float.parseFloat(totalF);
+                totalFactura = Float.parseFloat(totalF);
             } catch (NumberFormatException ex) {
                 ex.printStackTrace();
             }
 
-            boolean estado =  op.ingresarFacturaCabecera(numm, num, fechaa, (int) subTT, (int) IVA, (int) factT,clienteIdSelec,usuarioId);
+            String nomSer = (String) servicios.getSelectedItem();
+            op.modificarServicio(nomSer);
+            System.out.println("cliente"+clienteIdSelec);
+            System.out.println("usuario"+usuarioId);
+            boolean estado = op.ingresarFacturaCabecera(numFactura, num, fecha, (int) subtotal, (int) IVA, (int) totalFactura, clienteIdSelec, usuarioId);
             if (estado) {
-                JOptionPane.showMessageDialog(this, "Factura ingresada correctamente.");
+
                 this.setVisible(false);
             } else {
                 JOptionPane.showMessageDialog(this, "Error al ingresar la factura.");
-            }
-        } else if (e.getSource() == servicios) {
-            String nombreServicio = (String) servicios.getSelectedItem();
-            if (nombreServicio != null && !nombreServicio.isEmpty()) {
-                int precioUnitario = op.obtenerPrecioUnitario(nombreServicio);
-                String precioUnitarioStr = Integer.toString(precioUnitario);
-                //txtPrecioU.setText(precioUnitarioStr);
-            } else {
-                //txtPrecioU.setText("0");
             }
         } else if (e.getSource() == botCancelar) {
             this.setVisible(false);

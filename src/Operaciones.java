@@ -512,6 +512,37 @@ public class Operaciones {
         return idResultado;
     }
 
+
+    public int obtenerIDEmpleado(String empleado) {
+        // Assuming `empleado` has the format "Nombre Apellido"
+        // Split the string by space and take the first part
+        String nombre = empleado.split(" ")[0];
+
+        int idResultado = -1; // Default value or use another sentinel value
+
+        try {
+            String query = "SELECT VE_EMPLEADOS.EMP_ID FROM VE_EMPLEADOS JOIN VE_PERSONAS ON VE_EMPLEADOS.EMP_ID = VE_PERSONAS.PER_ID WHERE VE_PERSONAS.PER_NOMBRE LIKE ?";
+            try (PreparedStatement statement = this.conn.prepareStatement(query)) {
+                statement.setString(1, nombre + "%");
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        idResultado = resultSet.getInt("EMP_ID");
+                        System.out.println("ID encontrado: " + idResultado);
+                    } else {
+                        System.out.println("No se encontró ningún registro con el nombre: " + nombre);
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Handle the exception as needed
+        }
+
+        return idResultado;
+    }
+
+
     public int obtenerIDmascota(String nombre) {
         int idResultado = 0; // Initialize ID to 0 or any default value
 
@@ -684,7 +715,7 @@ public class Operaciones {
         ArrayList<String> clienteLista = new ArrayList<>();
 
         try {
-            String query = "SELECT PER_NOMBRE,PER_APELLIDO FROM VE_PERSONAS";
+            String query = "SELECT vp.PER_NOMBRE, vp.PER_APELLIDO FROM VE_PERSONAS vp JOIN VE_CLIENTES ves ON vp.PER_ID = ves.PER_ID";
             try (PreparedStatement statement = conn.prepareStatement(query);
                  ResultSet resultSet = statement.executeQuery()) {
 
@@ -737,26 +768,22 @@ public class Operaciones {
     }
 
 
-    public boolean modificarEmpleado(String cedula, String nombre, String apellido, String telefono, String salario, int idContrato) {
+    public boolean modificarServicio(String nombre) {
 
         boolean state = false;
 
 
         try {
-            PreparedStatement sentencia = conn.prepareStatement("UPDATE Empleado SET Nombre = ?, Apellido = ?, Telefono = ?, Salario = ?, idTipoContrato = ? WHERE Cedula = ?");
+            PreparedStatement sentencia = conn.prepareStatement("UPDATE VE_SERVICIOS SET SER_ESTADO = 'ACTIVADO' WHERE SER_NOMBRE = ?");
 
 
             sentencia.setString(1, nombre);
-            sentencia.setString(2, apellido);
-            sentencia.setString(3, telefono);
-            sentencia.setString(4, salario);
-            sentencia.setInt(5, idContrato);
-            sentencia.setString(6, cedula);
+
 
             int rowsAffected = sentencia.executeUpdate();
 
             if (rowsAffected > 0) {
-                JOptionPane.showMessageDialog(null, "Se ha MODIFICADO el empleado exitosamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(null, "Se ha MODIFICADO el SERIVICOS exitosamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
                 state = true;
             } else {
                 JOptionPane.showMessageDialog(null, "ERROR: NO Se ha MODIFICADO el empleado ", "ERROR", JOptionPane.ERROR_MESSAGE);
@@ -929,6 +956,42 @@ public class Operaciones {
     }
 
 
+    public boolean agregarUsuario( int codigoEmp, String usuario, String contrasena, String permiso) {
+        boolean state = false;
+        PreparedStatement sentencia = null;
+        ResultSet rs = null;
+
+        try {
+
+
+
+
+            // Preparar la inserción
+            sentencia = conn.prepareStatement( "INSERT INTO VE_USUARIOS(USU_ID,EMP_ID,USU_NOMBRE,USU_CONTRASENA,USU_PERMISO) VALUES (SEQ_VE_USUARIOS.NEXTVAL,?,?,?,?)");
+
+            sentencia.setInt(1,codigoEmp);
+            sentencia.setString(2,  usuario);
+            sentencia.setString(3,contrasena);
+            sentencia.setString(4, permiso);
+
+            int rowsAffected = sentencia.executeUpdate();
+            if (rowsAffected > 0) {
+                System.out.println("Usuario agregado exitosamente");
+                state = true;
+            } else {
+                System.err.println("Error: No se pudo agregar el usuario");
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(Operaciones.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            closeResources(rs, sentencia);
+        }
+
+        return state;
+    }
+
+
+
     public ArrayList<String> obtenerServicios() {
         ArrayList<String> listaServicios = new ArrayList<>();
 
@@ -962,18 +1025,42 @@ public class Operaciones {
     public boolean eliminarServicio(String nombre) {
         boolean state = false;
 
-        try {
-            String query = "DELETE  FROM VE_SERVICIOS WHERE SER_NOMBRE = ?";
-            try (PreparedStatement sentencia = conn.prepareStatement(query)) {
-                sentencia.setString(1, nombre);
+        // Queries
+        String estadoQuery = "SELECT SER_ESTADO FROM VE_SERVICIOS WHERE SER_NOMBRE = ?";
+        String updateQuery = "UPDATE VE_SERVICIOS SET SER_ESTADO = 'Suspended' WHERE SER_NOMBRE = ?";
+        String deleteQuery = "DELETE FROM VE_SERVICIOS WHERE SER_NOMBRE = ?";
 
-                int rowsAffected = sentencia.executeUpdate();
+        try (PreparedStatement selectStmt = conn.prepareStatement(estadoQuery)) {
+            selectStmt.setString(1, nombre);
+            try (ResultSet rs = selectStmt.executeQuery()) {
+                if (rs.next()) {
+                    String estado = rs.getString("SER_ESTADO");
+                    if ("Activo".equalsIgnoreCase(estado)) {
+                        // If the service is active, update its status to 'Suspended'
+                        try (PreparedStatement updateStmt = conn.prepareStatement(updateQuery)) {
+                            updateStmt.setString(1, nombre);
+                            int rowsAffected = updateStmt.executeUpdate();
+                            if (rowsAffected > 0) {
+                                JOptionPane.showMessageDialog(null, "Servicio presente en factura, desactivado correctamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
+                                state = true;
+                            } else {
+                                JOptionPane.showMessageDialog(null, "Servicio no se pudo desactivar", "ERROR", JOptionPane.ERROR_MESSAGE);
+                            }
+                        }
+                        return state; // Exit after updating the status
+                    }
+                }
+            }
 
+            // If not active, proceed to delete the service
+            try (PreparedStatement deleteStmt = conn.prepareStatement(deleteQuery)) {
+                deleteStmt.setString(1, nombre);
+                int rowsAffected = deleteStmt.executeUpdate();
                 if (rowsAffected > 0) {
                     JOptionPane.showMessageDialog(null, "Servicio eliminado correctamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
                     state = true;
                 } else {
-                    JOptionPane.showMessageDialog(null, "Servicio no se pudo eliminar ", "ERROR", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "Servicio no se pudo eliminar", "ERROR", JOptionPane.ERROR_MESSAGE);
                 }
             }
         } catch (SQLException ex) {
@@ -984,35 +1071,37 @@ public class Operaciones {
         return state;
     }
 
-    public ArrayList<String> obtenerEmpleados() {
-        ArrayList<String> listaEmpleados = new ArrayList<>();
 
-        try {
-            String query = "SELECT per_nombre FROM VE_PERSONAS vp, VE_EMPLEADOS vee WHERE vp.per_id = vee.per_id ORDER BY 1";
-            try (PreparedStatement statement = conn.prepareStatement(query);
-                 ResultSet resultSet = statement.executeQuery()) {
+    public ArrayList<String> obtenerEmpleados () {
+            ArrayList<String> listaEmpleados = new ArrayList<>();
 
-                while (resultSet.next()) {
+            try {
+                String query = "SELECT per_nombre FROM VE_PERSONAS vp, VE_EMPLEADOS vee WHERE vp.per_id = vee.per_id AND TIP_CON_ID =1 ORDER BY 1";
+                try (PreparedStatement statement = conn.prepareStatement(query);
+                     ResultSet resultSet = statement.executeQuery()) {
 
-
-                    String serNombre = resultSet.getString("per_nombre");
+                    while (resultSet.next()) {
 
 
-                    // Create a string representation of the employee details
-                    String datosServico = serNombre;
+                        String serNombre = resultSet.getString("per_nombre");
 
-                    listaEmpleados.add(datosServico);
-                    System.out.println(listaEmpleados);
+
+                        // Create a string representation of the employee details
+                        String datosServico = serNombre;
+
+                        listaEmpleados.add(datosServico);
+                        System.out.println(listaEmpleados);
+                    }
                 }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                // Handle the exception as needed
             }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            // Handle the exception as needed
+
+            return listaEmpleados;
+
         }
 
-        return listaEmpleados;
-
-    }
 
     public boolean eliminarEmpleadoo(String nombre) {
         boolean state = false;
@@ -1053,35 +1142,37 @@ public class Operaciones {
 
         return state;
     }
-
     public ArrayList<String> obtenerClientes() {
         ArrayList<String> listaClientes = new ArrayList<>();
 
-        try {
-            String query = "SELECT VP.PER_NOMBRE FROM VE_CLIENTES VC JOIN VE_PERSONAS VP ON VP.PER_ID = VC.PER_ID ";
-            try (PreparedStatement statement = conn.prepareStatement(query);
-                 ResultSet resultSet = statement.executeQuery()) {
+        // SQL query to fetch client names
+        String query = "SELECT VP.PER_NOMBRE " +
+                "FROM VE_CLIENTES VC " +
+                "JOIN VE_PERSONAS VP ON VP.PER_ID = VC.PER_ID " +
+                "WHERE VC.CLI_ACTIVO = 'Y'"; // Assuming 'S' means active client
 
-                while (resultSet.next()) {
+        try (PreparedStatement statement = conn.prepareStatement(query);
+             ResultSet resultSet = statement.executeQuery()) {
 
+            // Iterate through the result set
+            while (resultSet.next()) {
+                // Get the client name from the result set
+                String nombreCliente = resultSet.getString("PER_NOMBRE");
 
-                    String serNombre = resultSet.getString("PER_NOMBRE");
-
-
-                    // Create a string representation of the employee details
-                    String datosServico = serNombre;
-
-                    listaClientes.add(datosServico);
-                    System.out.println(listaClientes);
-                }
+                // Add the client name to the list
+                listaClientes.add(nombreCliente);
             }
+
+            // Optionally print the list after fetching all data
+            System.out.println(listaClientes);
+
         } catch (SQLException ex) {
+            // Print exception details
             ex.printStackTrace();
-            // Handle the exception as needed
+            // Handle exception as needed, maybe logging or rethrowing
         }
 
         return listaClientes;
-
     }
 
     public ArrayList<String> obtenerCitas() {
@@ -1308,15 +1399,15 @@ public class Operaciones {
         return state;
     }
 
-
     public ArrayList<String> obtenerTodosLosClientes() {
         ArrayList<String> listaClientes = new ArrayList<>();
 
         try {
-            // Correct the query to select all necessary columns
+            // Adjust the query to fetch only clients
             String query = "SELECT vp.per_id, vp.per_nombre, vp.per_apellido, vp.per_direccion, vp.per_telefono, vp.per_correo_electronico " +
                     "FROM VE_PERSONAS vp " +
-                    "JOIN VE_EMPLEADOS vee ON vp.per_id = vee.per_id " +
+                    "JOIN VE_CLIENTES vc ON vp.per_id = vc.per_id " +
+                    "WHERE vc.cli_activo = 'Y' " + // Assuming 'S' means active client
                     "ORDER BY vp.per_nombre";
 
             try (PreparedStatement statement = conn.prepareStatement(query);
@@ -1348,11 +1439,13 @@ public class Operaciones {
     }
 
 
+
     public ArrayList<String> obtenerServiciosCombo() {
         ArrayList<String> listaServicios = new ArrayList<>();
 
         try {
-            String query = "SELECT SER_NOMBRE FROM VE_SERVICIOS";
+            String query = "SELECT SER_NOMBRE FROM VE_SERVICIOS WHERE SER_ESTADO LIKE 'Active'";
+
             try (PreparedStatement statement = conn.prepareStatement(query);
                  ResultSet resultSet = statement.executeQuery()) {
 
@@ -1392,6 +1485,7 @@ public class Operaciones {
                 if (resultSet.next()) {
                     // Retrieve the price from the result set
                     precio = resultSet.getInt("SER_PRECIO");
+
                 }
             }
             System.out.println(precio);
