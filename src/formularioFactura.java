@@ -12,6 +12,8 @@ import static java.lang.Integer.parseInt;
 public class formularioFactura extends JFrame implements ActionListener {
 
     private JButton botGrabar;
+
+    float subtotal;
     private JButton botCancelar;
 
     private JTextField txtNum;
@@ -27,6 +29,8 @@ public class formularioFactura extends JFrame implements ActionListener {
     private Operaciones op;
     public JComboBox<String> clientes;
     public JComboBox<String> servicios;
+
+    int cantidad;
     public JComboBox<String> usuarios;
 
     private int precioUnitario = 0; // Precio unitario inicial
@@ -34,6 +38,8 @@ public class formularioFactura extends JFrame implements ActionListener {
     public formularioFactura(Operaciones op) {
         this.op = op;
         op.conectar();
+        cantidad =0;
+        subtotal = 0.00F;
         super.setLayout(null);
 
         JLabel labCedula = new JLabel("Factura N°:");
@@ -114,7 +120,7 @@ public class formularioFactura extends JFrame implements ActionListener {
         servicios = new JComboBox<>();
         servicios.setSize(120, 25);
         servicios.setLocation(100, 125);
-        ArrayList<String> listaServicios = op.obtenerServiciosCombo();
+        ArrayList<String> listaServicios = op.obtenerServicios();
         for (String servicio : listaServicios) {
             servicios.addItem(servicio);
         }
@@ -194,8 +200,8 @@ public class formularioFactura extends JFrame implements ActionListener {
 
     public void updateSubtotalAndTotal() {
         try {
-            int cantidad = parseInt(txtCant.getText());
-            float subtotal = cantidad * precioUnitario;
+            cantidad = parseInt(txtCant.getText());
+             subtotal = cantidad * precioUnitario;
             txtSubT.setText(String.format("%.2f", subtotal));
             updateTotal(); // Actualizar total e IVA
         } catch (NumberFormatException ex) {
@@ -221,6 +227,7 @@ public class formularioFactura extends JFrame implements ActionListener {
 
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == botGrabar) {
+
             String cliente = (String) clientes.getSelectedItem();
             String email = op.obtenerEmailCliente(cliente);
             Properties properties = new Properties();
@@ -228,7 +235,7 @@ public class formularioFactura extends JFrame implements ActionListener {
             properties.put("mail.smtp.starttls.enable", "true");
             properties.put("mail.smtp.host", "smtp.gmail.com");
             properties.put("mail.smtp.port", "587");
-            SendEmail sm = new SendEmail(properties, email);
+
 
             String num = txtNum.getText();
             int numFactura = parseInt(num);
@@ -236,6 +243,11 @@ public class formularioFactura extends JFrame implements ActionListener {
             String subt = txtSubT.getText();
             String iva = txtIva.getText();
             String totalF = txtTotal.getText();
+            String selectedItem = (String) servicios.getSelectedItem();
+            int idServicio = op.obtenerIDServicio(selectedItem);
+
+
+
 
             String selectedUsuario = (String) usuarios.getSelectedItem();
             int usuarioId = op.obtenerIDUsuario(selectedUsuario);
@@ -254,11 +266,18 @@ public class formularioFactura extends JFrame implements ActionListener {
                 ex.printStackTrace();
             }
 
+
+
             String nomSer = (String) servicios.getSelectedItem();
             op.modificarServicio(nomSer);
             System.out.println("cliente"+clienteIdSelec);
+
             System.out.println("usuario"+usuarioId);
-            boolean estado = op.ingresarFacturaCabecera(numFactura, num, fecha, (int) subtotal, (int) IVA, (int) totalFactura, clienteIdSelec, usuarioId);
+            String cant = String.valueOf(cantidad);
+
+            int subtt = (int) subtotal;
+            SendEmail sm = new SendEmail(properties, email,num,fecha,subt,iva,totalF,nomSer,cant,clienteSelec);
+            boolean estado = op.ingresarFacturaCabecera(numFactura, num, fecha, (int) subtotal, (int) IVA, (int) totalFactura, clienteIdSelec, usuarioId,cantidad,precioUnitario,subtt,idServicio);
             if (estado) {
 
                 this.setVisible(false);

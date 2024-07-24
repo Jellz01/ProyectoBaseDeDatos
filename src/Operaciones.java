@@ -491,13 +491,42 @@ public class Operaciones {
         int idResultado = 10; // Default value or use another sentinel value
 
         try {
-            String query = "SELECT PER_ID FROM VE_PERSONAS WHERE PER_NOMBRE = ?";
+            String query = "SELECT c.CLI_ID FROM VE_CLIENTES c JOIN VE_PERSONAS p ON c.PER_ID = p.PER_ID WHERE p.PER_NOMBRE = ?";
             try (PreparedStatement statement = conn.prepareStatement(query)) {
                 statement.setString(1, nombre);
 
                 try (ResultSet resultSet = statement.executeQuery()) {
                     if (resultSet.next()) {
-                        idResultado = resultSet.getInt("PER_ID");
+                        idResultado = resultSet.getInt("CLI_ID");
+                        System.out.println("ID encontrado: " + idResultado);
+                    } else {
+                        System.out.println("No se encontró ningún registro con el nombre: " + nombre);
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Handle the exception as needed
+        }
+
+        return idResultado;
+    }
+
+    public int obtenerIDServicio(String servicio) {
+        // Assuming `cliente` has the format "Nombre Apellido"
+        // Split the string by space and take the first part
+        String nombre = servicio.split(" ")[0];
+
+        int idResultado = 10; // Default value or use another sentinel value
+
+        try {
+            String query = "SELECT SER_ID FROM VE_SERVICIOS WHERE SER_NOMBRE = ?";
+            try (PreparedStatement statement = conn.prepareStatement(query)) {
+                statement.setString(1, nombre);
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        idResultado = resultSet.getInt("SER_ID");
                         System.out.println("ID encontrado: " + idResultado);
                     } else {
                         System.out.println("No se encontró ningún registro con el nombre: " + nombre);
@@ -783,7 +812,7 @@ public class Operaciones {
             int rowsAffected = sentencia.executeUpdate();
 
             if (rowsAffected > 0) {
-                JOptionPane.showMessageDialog(null, "Se ha MODIFICADO el SERIVICOS exitosamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
+                //JOptionPane.showMessageDialog(null, "Se ha MODIFICADO el SERIVICOS exitosamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
                 state = true;
             } else {
                 JOptionPane.showMessageDialog(null, "ERROR: NO Se ha MODIFICADO el empleado ", "ERROR", JOptionPane.ERROR_MESSAGE);
@@ -1285,17 +1314,23 @@ public class Operaciones {
     }
 
 
-    public boolean ingresarFacturaCabecera(int id, String num, String fecha, float subtotal, float iva, float total, int cliId, int usuId) {
+    public boolean ingresarFacturaCabecera(int id, String num, String fecha, float subtotal, float iva, float total, int cliId, int usuId, int cantidad, float precio_uni, float subtotal_detalle, int ser_id) {
         boolean state = false;
 
-        try {
-            // SQL query using TO_DATE to format the date in 'YYYY-MM-DD'
-            String sql = "INSERT INTO VE_CABECERA_FACTURAS (CAB_FAC_ID, CAB_FAC_NUMERO, CAB_FAC_FECHA, CAB_FAC_SUBTOTAL, CAB_FAC_IVA, CAB_FAC_VALOR_TOTAL, CLI_ID, USU_ID) VALUES (?, ?, TO_DATE(?, 'YYYY-MM-DD'), ?, ?, ?, ?, ?)";
-            PreparedStatement sentencia = conn.prepareStatement(sql);
+        Connection conn = null;
+        PreparedStatement sentencia = null;
 
+        try {
+            // Suponiendo que 'conn' es tu conexión a la base de datos
+            conn = DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:xe", "c##jellz", "Jjwm20020");
+            conn.setAutoCommit(false); // Inicia la transacción
+
+            // SQL query para insertar en VE_CABECERA_FACTURAS
+            String sqlCabecera = "INSERT INTO VE_CABECERA_FACTURAS (CAB_FAC_ID, CAB_FAC_NUMERO, CAB_FAC_FECHA, CAB_FAC_SUBTOTAL, CAB_FAC_IVA, CAB_FAC_VALOR_TOTAL, CLI_ID, USU_ID) VALUES (?, ?, TO_DATE(?, 'YYYY-MM-DD'), ?, ?, ?, ?, ?)";
+            sentencia = conn.prepareStatement(sqlCabecera);
             sentencia.setInt(1, id);
             sentencia.setString(2, num);
-            sentencia.setString(3, fecha); // No need to convert date format, it's already in 'YYYY-MM-DD'
+            sentencia.setString(3, fecha);
             sentencia.setFloat(4, subtotal);
             sentencia.setFloat(5, iva);
             sentencia.setFloat(6, total);
@@ -1304,20 +1339,62 @@ public class Operaciones {
 
             int rowsAffected = sentencia.executeUpdate();
 
+            // Comprobar si la inserción fue exitosa
             if (rowsAffected > 0) {
-                JOptionPane.showMessageDialog(null, "Se ha ingresado la factura exitosamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
-                state = true;
+                // Inserción en VE_DETALLE_FACTURAS
+                String sqlDetalle = "INSERT INTO VE_DETALLE_FACTURAS (DET_FAC_ID, DET_FAC_CANTIDAD, DET_FAC_PRECIO_UNITARIO, DET_FAC_SUBTOTAL, DET_FAC_IVA, DET_FAC_TOTAL, CAB_FAC_ID, SER_ID) VALUES (SEQ_VE_DETALLE_FACTURAS.NEXTVAL, ?, ?, ?, ?, ?, ?, ?)";
+                sentencia = conn.prepareStatement(sqlDetalle);
+                sentencia.setInt(1, cantidad);
+                sentencia.setFloat(2, precio_uni);
+                sentencia.setFloat(3, subtotal_detalle);
+                sentencia.setFloat(4, iva);
+                sentencia.setFloat(5, total);
+                sentencia.setInt(6, id); // Asegura que el CAB_FAC_ID coincida
+                sentencia.setInt(7, ser_id);
+
+                int rowsAffectedDetalle = sentencia.executeUpdate();
+
+                if (rowsAffectedDetalle > 0) {
+                    conn.commit(); // Confirma la transacción
+                    JOptionPane.showMessageDialog(null, "Se ha ingresado la factura exitosamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
+                    state = true;
+                } else {
+                    conn.rollback(); // Deshace la transacción en caso de error
+                    JOptionPane.showMessageDialog(null, "ERROR: No se ha ingresado el detalle de la factura", "ERROR", JOptionPane.ERROR_MESSAGE);
+                }
             } else {
+                conn.rollback(); // Deshace la transacción en caso de error
                 JOptionPane.showMessageDialog(null, "ERROR: No se ha ingresado la factura", "ERROR", JOptionPane.ERROR_MESSAGE);
             }
-
-            sentencia.close();
         } catch (SQLException ex) {
+            if (conn != null) {
+                try {
+                    conn.rollback(); // Deshace la transacción en caso de excepción
+                } catch (SQLException e) {
+                    Logger.getLogger(Operaciones.class.getName()).log(Level.SEVERE, null, e);
+                }
+            }
             Logger.getLogger(Operaciones.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            if (sentencia != null) {
+                try {
+                    sentencia.close();
+                } catch (SQLException e) {
+                    Logger.getLogger(Operaciones.class.getName()).log(Level.SEVERE, null, e);
+                }
+            }
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    Logger.getLogger(Operaciones.class.getName()).log(Level.SEVERE, null, e);
+                }
+            }
         }
 
         return state;
     }
+
 
 
     public boolean eliminarCliente(String nombre) {
