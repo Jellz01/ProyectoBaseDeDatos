@@ -54,11 +54,13 @@ public class ViewMenuPrincipal extends JFrame implements ActionListener {
 
     private JButton botCerrar;
     private ViewMenuPrincipal vmp;
+    String usuarioU;
 
     Properties properties;
 
-    public void menu(ViewMenuPrincipal vmp){
+    public void menu(ViewMenuPrincipal vmp,String usuarioU){
         this.vmp = vmp;
+        this.usuarioU = usuarioU;
         this.properties = properties;
 
 
@@ -289,7 +291,10 @@ public class ViewMenuPrincipal extends JFrame implements ActionListener {
 
         }
         else if (e.getSource() == ingresoFactura){
+
             ControlerMenuPrincipal cmp = new ControlerMenuPrincipal(13,vmp);
+            cmp.factura(usuarioU);
+            System.out.println(usuarioU);
 
         }
         else if (e.getSource() == borrarFactura){

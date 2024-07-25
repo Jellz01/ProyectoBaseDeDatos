@@ -83,7 +83,7 @@ public class VisualLogIn extends JFrame implements ActionListener {
             boolean statusContrasena = op.obtenerContrasena(usuarioC);
 
             if(status == true &&(statusContrasena == true)) {
-                ControladorUsuarios cu = new ControladorUsuarios(1);
+                ControladorUsuarios cu = new ControladorUsuarios(1,usuarioU);
                 this.setVisible(false);
             }
             else {

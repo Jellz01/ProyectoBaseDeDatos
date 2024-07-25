@@ -140,7 +140,7 @@ public class Operaciones {
             sentenciaPersona.setString(3, cedula);
             sentenciaPersona.setString(4, apellido);
             sentenciaPersona.setString(5, direccion);
-            sentenciaPersona.setString(6,telefono);
+            sentenciaPersona.setString(6, telefono);
             sentenciaPersona.setString(7, email);
 
             int rowsAffected = sentenciaPersona.executeUpdate();
@@ -178,9 +178,6 @@ public class Operaciones {
 
         return state;
     }
-
-
-
 
 
     public boolean agregarCliente(String cedula, String nombre, String apellido, String telefono, String direccion, String correoElectronico) {
@@ -342,8 +339,6 @@ public class Operaciones {
 
         return state;
     }
-
-
 
 
     private void closeResources(AutoCloseable... resources) {
@@ -608,7 +603,7 @@ public class Operaciones {
                     if (resultSet.next()) {
 
                         idResultado = resultSet.getInt("USU_ID");
-                        System.out.println("CACAC"+idResultado);
+                        System.out.println("CACAC" + idResultado);
                     }
                 }
             }
@@ -619,8 +614,6 @@ public class Operaciones {
 
         return idResultado;
     }
-
-
 
 
     public ArrayList<String> obtenerAnimalesTipos() {
@@ -636,7 +629,6 @@ public class Operaciones {
                         // Assuming your Empleado table has columns like 'Cedula', 'Nombre', 'Apellido', etc.
                         String IDResult = resultSet.getString("MAS_ID");
                         String nombreResult = resultSet.getString("MAS_NOMBRE");
-
 
 
                         // Add more columns as needed
@@ -702,7 +694,6 @@ public class Operaciones {
 
         return empleadoList;
     }
-
 
 
     public ArrayList<String> obtenerTodosLasCitas() {
@@ -985,7 +976,7 @@ public class Operaciones {
     }
 
 
-    public boolean agregarUsuario( int codigoEmp, String usuario, String contrasena, String permiso) {
+    public boolean agregarUsuario(int codigoEmp, String usuario, String contrasena, String permiso) {
         boolean state = false;
         PreparedStatement sentencia = null;
         ResultSet rs = null;
@@ -993,14 +984,12 @@ public class Operaciones {
         try {
 
 
-
-
             // Preparar la inserción
-            sentencia = conn.prepareStatement( "INSERT INTO VE_USUARIOS(USU_ID,EMP_ID,USU_NOMBRE,USU_CONTRASENA,USU_PERMISO) VALUES (SEQ_VE_USUARIOS.NEXTVAL,?,?,?,?)");
+            sentencia = conn.prepareStatement("INSERT INTO VE_USUARIOS(USU_ID,EMP_ID,USU_NOMBRE,USU_CONTRASENA,USU_PERMISO) VALUES (SEQ_VE_USUARIOS.NEXTVAL,?,?,?,?)");
 
-            sentencia.setInt(1,codigoEmp);
-            sentencia.setString(2,  usuario);
-            sentencia.setString(3,contrasena);
+            sentencia.setInt(1, codigoEmp);
+            sentencia.setString(2, usuario);
+            sentencia.setString(3, contrasena);
             sentencia.setString(4, permiso);
 
             int rowsAffected = sentencia.executeUpdate();
@@ -1022,6 +1011,66 @@ public class Operaciones {
 
 
     public ArrayList<String> obtenerServicios() {
+        ArrayList<String> listaServicios = new ArrayList<>();
+
+        try {
+            String query = "SELECT SER_NOMBRE FROM VE_SERVICIOS WHERE SER_ESTADO = 'Activo'";
+            try (PreparedStatement statement = conn.prepareStatement(query);
+                 ResultSet resultSet = statement.executeQuery()) {
+
+                while (resultSet.next()) {
+
+
+                    String serNombre = resultSet.getString("SER_NOMBRE");
+
+
+                    // Create a string representation of the employee details
+                    String datosServico = serNombre;
+
+                    listaServicios.add(datosServico);
+                    System.out.println(listaServicios);
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Handle the exception as needed
+        }
+
+        return listaServicios;
+
+    }
+
+    public ArrayList<String> obtenerServiciosModificar() {
+        ArrayList<String> listaServicios = new ArrayList<>();
+
+        try {
+            String query = "SELECT SER_NOMBRE FROM VE_SERVICIOS";
+            try (PreparedStatement statement = conn.prepareStatement(query);
+                 ResultSet resultSet = statement.executeQuery()) {
+
+                while (resultSet.next()) {
+
+
+                    String serNombre = resultSet.getString("SER_NOMBRE");
+
+
+                    // Create a string representation of the employee details
+                    String datosServico = serNombre;
+
+                    listaServicios.add(datosServico);
+                    System.out.println(listaServicios);
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Handle the exception as needed
+        }
+
+        return listaServicios;
+
+    }
+
+    public ArrayList<String> obtenerTodsLosServicios() {
         ArrayList<String> listaServicios = new ArrayList<>();
 
         try {
@@ -1054,42 +1103,48 @@ public class Operaciones {
     public boolean eliminarServicio(String nombre) {
         boolean state = false;
 
-        // Queries
-        String estadoQuery = "SELECT SER_ESTADO FROM VE_SERVICIOS WHERE SER_NOMBRE = ?";
-        String updateQuery = "UPDATE VE_SERVICIOS SET SER_ESTADO = 'Suspended' WHERE SER_NOMBRE = ?";
+        // Query para eliminar el servicio
         String deleteQuery = "DELETE FROM VE_SERVICIOS WHERE SER_NOMBRE = ?";
 
-        try (PreparedStatement selectStmt = conn.prepareStatement(estadoQuery)) {
-            selectStmt.setString(1, nombre);
-            try (ResultSet rs = selectStmt.executeQuery()) {
-                if (rs.next()) {
-                    String estado = rs.getString("SER_ESTADO");
-                    if ("Activo".equalsIgnoreCase(estado)) {
-                        // If the service is active, update its status to 'Suspended'
-                        try (PreparedStatement updateStmt = conn.prepareStatement(updateQuery)) {
-                            updateStmt.setString(1, nombre);
-                            int rowsAffected = updateStmt.executeUpdate();
-                            if (rowsAffected > 0) {
-                                JOptionPane.showMessageDialog(null, "Servicio presente en factura, desactivado correctamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
-                                state = true;
-                            } else {
-                                JOptionPane.showMessageDialog(null, "Servicio no se pudo desactivar", "ERROR", JOptionPane.ERROR_MESSAGE);
-                            }
-                        }
-                        return state; // Exit after updating the status
-                    }
-                }
+        try (PreparedStatement deleteStmt = conn.prepareStatement(deleteQuery)) {
+            deleteStmt.setString(1, nombre);
+            int rowsAffected = deleteStmt.executeUpdate();
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(null, "Servicio eliminado correctamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
+                state = true;
+            } else {
+                JOptionPane.showMessageDialog(null, "Servicio no se pudo eliminar", "ERROR", JOptionPane.ERROR_MESSAGE);
             }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Servicio no se pudo eliminar, modifquelo , presente en una factura", "ERROR", JOptionPane.ERROR_MESSAGE);
 
-            // If not active, proceed to delete the service
-            try (PreparedStatement deleteStmt = conn.prepareStatement(deleteQuery)) {
-                deleteStmt.setString(1, nombre);
-                int rowsAffected = deleteStmt.executeUpdate();
-                if (rowsAffected > 0) {
-                    JOptionPane.showMessageDialog(null, "Servicio eliminado correctamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
-                    state = true;
-                } else {
-                    JOptionPane.showMessageDialog(null, "Servicio no se pudo eliminar", "ERROR", JOptionPane.ERROR_MESSAGE);
+            // Manejar la excepción según sea necesario
+        }
+
+        return state;
+    }
+
+
+    public ArrayList<String> obtenerEmpleados() {
+        ArrayList<String> listaEmpleados = new ArrayList<>();
+
+        try {
+            String query = "SELECT per_nombre FROM VE_PERSONAS vp, VE_EMPLEADOS vee WHERE vp.per_id = vee.per_id AND TIP_CON_ID =1 ORDER BY 1";
+            try (PreparedStatement statement = conn.prepareStatement(query);
+                 ResultSet resultSet = statement.executeQuery()) {
+
+                while (resultSet.next()) {
+
+
+                    String serNombre = resultSet.getString("per_nombre");
+
+
+                    // Create a string representation of the employee details
+                    String datosServico = serNombre;
+
+                    listaEmpleados.add(datosServico);
+                    System.out.println(listaEmpleados);
                 }
             }
         } catch (SQLException ex) {
@@ -1097,39 +1152,94 @@ public class Operaciones {
             // Handle the exception as needed
         }
 
-        return state;
+        return listaEmpleados;
+
     }
 
 
-    public ArrayList<String> obtenerEmpleados () {
-            ArrayList<String> listaEmpleados = new ArrayList<>();
+    public ArrayList<String> obtenerDatosparaEmail(int cabId) {
+        ArrayList<String> listaServios = new ArrayList<>();
 
-            try {
-                String query = "SELECT per_nombre FROM VE_PERSONAS vp, VE_EMPLEADOS vee WHERE vp.per_id = vee.per_id AND TIP_CON_ID =1 ORDER BY 1";
-                try (PreparedStatement statement = conn.prepareStatement(query);
-                     ResultSet resultSet = statement.executeQuery()) {
+        String query = "SELECT DET_FAC_CANTIDAD, DET_FAC_PRECIO_UNITARIO, DET_FAC_SUBTOTAL, DET_FAC_IVA, DET_FAC_TOTAL " +
+                "FROM VE_DETALLE_FACTURAS WHERE CAB_FAC_ID = ?";
 
-                    while (resultSet.next()) {
+        try (PreparedStatement statement = conn.prepareStatement(query)) {
+            // Establecer el parámetro del PreparedStatement
+            statement.setInt(1, cabId);
 
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    // Obtener los datos del ResultSet
+                    int cantidad = resultSet.getInt("DET_FAC_CANTIDAD");
+                    double precioUnitario = resultSet.getDouble("DET_FAC_PRECIO_UNITARIO");
+                    double subtotal = resultSet.getDouble("DET_FAC_SUBTOTAL");
+                    double iva = resultSet.getDouble("DET_FAC_IVA");
+                    double total = resultSet.getDouble("DET_FAC_TOTAL");
 
-                        String serNombre = resultSet.getString("per_nombre");
+                    // Crear una cadena de texto con los detalles del empleado
+                    String datosServicio = String.format("Cantidad: %d, Precio Unitario: %.2f, Subtotal: %.2f, IVA: %.2f, Total: %.2f",
+                            cantidad, precioUnitario, subtotal, iva, total);
 
-
-                        // Create a string representation of the employee details
-                        String datosServico = serNombre;
-
-                        listaEmpleados.add(datosServico);
-                        System.out.println(listaEmpleados);
-                    }
+                    listaServios.add(datosServicio);
                 }
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-                // Handle the exception as needed
             }
-
-            return listaEmpleados;
-
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Manejar la excepción según sea necesario
         }
+
+        return listaServios;
+    }
+
+    public String obtenerNombreUsuario(String nombre) {
+        String datosServico = null; // Initialize to store the result
+
+        String query = "SELECT p.PER_NOMBRE || ' ' || p.PER_APELLIDO AS FULL_NAME " +
+                "FROM VE_USUARIOS u " +
+                "JOIN VE_EMPLEADOS e ON u.EMP_ID = e.EMP_ID " +
+                "JOIN VE_PERSONAS p ON e.PER_ID = p.PER_ID " +
+                "WHERE u.USU_NOMBRE = ?";
+
+        try (PreparedStatement statement = conn.prepareStatement(query)) {
+            // Set the parameter for the PreparedStatement
+            statement.setString(1, nombre);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    // Retrieve the full name from the result set
+                    datosServico = resultSet.getString("FULL_NAME");
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Handle the exception as needed
+        }
+
+        return datosServico; // Return the full name
+    }
+
+    public String obtenerDireccion(String nombre) {
+        String datosServico = null; // Initialize to store the result
+
+        String query = "SELECT PER_DIRECCION FROM VE_PERSONAS vpp, VE_CLIENTES vcc WHERE vcc.CLI_ID=vpp.PER_ID AND PER_NOMBRE=?";
+
+        try (PreparedStatement statement = conn.prepareStatement(query)) {
+            // Set the parameter for the PreparedStatement
+            statement.setString(1, nombre);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    // Retrieve the full name from the result set
+                    datosServico = resultSet.getString("PER_DIRECCION");
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Handle the exception as needed
+        }
+
+        return datosServico; // Return the full name
+    }
 
 
     public boolean eliminarEmpleadoo(String nombre) {
@@ -1171,6 +1281,7 @@ public class Operaciones {
 
         return state;
     }
+
     public ArrayList<String> obtenerClientes() {
         ArrayList<String> listaClientes = new ArrayList<>();
 
@@ -1233,6 +1344,77 @@ public class Operaciones {
 
         return listaCitas;
     }
+
+
+    public ArrayList<String> obtenerFacturas(int cabeceraID) {
+        ArrayList<String> listaFacturas = new ArrayList<>();
+
+        String query = "SELECT \n" +
+                "    cab.CAB_FAC_ID AS Factura_ID,\n" +
+                "    per.PER_NOMBRE AS Cliente_Nombre,\n" +
+                "    per.PER_DIRECCION AS Cliente_Direccion,\n" +
+                "    per.PER_CORREO_ELECTRONICO AS Cliente_Email,\n" +
+                "    ser.SER_NOMBRE AS Servicio,\n" +
+                "    ser.SER_PRECIO AS Precio_Unitario,\n" +
+                "    ser.SER_TIENE_IVA AS IVA_Indicado,\n" +
+                "    det.DET_FAC_CANTIDAD AS Cantidad,\n" +
+                "    det.DET_FAC_SUBTOTAL AS Subtotal,\n" +
+                "    (det.DET_FAC_CANTIDAD * ser.SER_PRECIO) AS Total_Calculado,\n" +
+                "    (SELECT SUM(det2.DET_FAC_CANTIDAD * ser2.SER_PRECIO)\n" +
+                "     FROM VE_DETALLE_FACTURAS det2\n" +
+                "     JOIN VE_SERVICIOS ser2 ON det2.SER_ID = ser2.SER_ID\n" +
+                "     WHERE det2.CAB_FAC_ID = cab.CAB_FAC_ID) AS Total_Factura\n" +
+                "FROM \n" +
+                "    VE_CABECERA_FACTURAS cab\n" +
+                "JOIN \n" +
+                "    VE_DETALLE_FACTURAS det ON cab.CAB_FAC_ID = det.CAB_FAC_ID\n" +
+                "JOIN \n" +
+                "    VE_SERVICIOS ser ON det.SER_ID = ser.SER_ID\n" +
+                "JOIN \n" +
+                "    VE_PERSONAS per ON cab.CLI_ID = per.PER_ID\n" +
+                "WHERE \n" +
+                "    cab.CAB_FAC_ID = ?\n" +
+                "ORDER BY \n" +
+                "    ser.SER_NOMBRE";
+
+        try (PreparedStatement statement = conn.prepareStatement(query)) {
+            // Asigna el parámetro
+            statement.setInt(1, cabeceraID);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    // Recupera datos del ResultSet
+                    String facturaId = resultSet.getString("Factura_ID");
+                    String clienteNombre = resultSet.getString("Cliente_Nombre");
+                    String clienteDireccion = resultSet.getString("Cliente_Direccion");
+                    String clienteEmail = resultSet.getString("Cliente_Email");
+                    String servicio = resultSet.getString("Servicio");
+                    double precioUnitario = resultSet.getDouble("Precio_Unitario");
+                    String ivaIndicado = resultSet.getString("IVA_Indicado");
+                    int cantidad = resultSet.getInt("Cantidad");
+                    double subtotal = resultSet.getDouble("Subtotal");
+                    double totalCalculado = resultSet.getDouble("Total_Calculado");
+                    double totalFactura = resultSet.getDouble("Total_Factura");
+
+                    // Crea una representación en cadena de los detalles de la factura
+                    String datosFactura = String.format(
+                            "Factura ID: %s, Cliente: %s, Direccion: %s, Email: %s, Servicio: %s, Precio Unitario: %.2f, IVA: %s, Cantidad: %d, Subtotal: %.2f, Total Calculado: %.2f, Total Factura: %.2f",
+                            facturaId, clienteNombre, clienteDireccion, clienteEmail, servicio, precioUnitario, ivaIndicado, cantidad, subtotal, totalCalculado, totalFactura
+                    );
+
+                    // Agrega la representación en cadena a la lista
+                    listaFacturas.add(datosFactura);
+                    System.out.println(datosFactura);
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Maneja la excepción según sea necesario
+        }
+
+        return listaFacturas;
+    }
+
 
     public ArrayList<String> obtenerCitass() {
         ArrayList<String> listaCitas = new ArrayList<>();
@@ -1314,62 +1496,94 @@ public class Operaciones {
     }
 
 
-    public boolean ingresarFacturaCabecera(int id, String num, String fecha, float subtotal, float iva, float total, int cliId, int usuId, int cantidad, float precio_uni, float subtotal_detalle, int ser_id) {
-        boolean state = false;
 
+    public boolean cambiarEstado(int serId) {
+        String query = "UPDATE VE_SERVICIOS SET SER_ESTADO = CASE WHEN SER_ESTADO = 'Desactivado' THEN 'Activo' ELSE 'Desactivado' END WHERE SER_ID = ?";
+
+        try (PreparedStatement statement = conn.prepareStatement(query)) {
+            statement.setInt(1, serId); // Establecer el valor del parámetro SER_ID
+
+            int filasAfectadas = statement.executeUpdate(); // Ejecutar la actualización
+            JOptionPane.showMessageDialog(null,"El servicio ha sido cambiado de estado correctamente ","INFO",JOptionPane.INFORMATION_MESSAGE);
+            return filasAfectadas > 0; // Retornar verdadero si se actualizó al menos una fila
+
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null,"Error al cambiar el estado ","ERROR",JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace(); // Manejo de errores
+            return false;
+        }
+    }
+
+    public int obtenerNumServicio() {
+        int count = 0;
+        try {
+            String query = "SELECT COUNT(SER_ID) AS total_Servicios FROM VE_SERVICIOS";
+            try (PreparedStatement statement = conn.prepareStatement(query);
+                 ResultSet resultSet = statement.executeQuery()) {
+
+                if (resultSet.next()) {
+                    count = resultSet.getInt("total_Servicios");
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Handle the exception as needed
+        }
+        return count + 1;
+    }
+
+    public boolean cambiarEstadoServicio(int servicio) {
+        String query = "UPDATE VE_SERVICIOS SET SER_ESTADO = CASE WHEN SER_ESTADO = 'Desactivado' THEN 'Activo' ELSE 'Desactivado' END WHERE SER_ID = ?";
+
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, servicio); // Establecer el valor del parámetro SER_ID
+
+            int filasAfectadas = stmt.executeUpdate(); // Ejecutar la actualización
+            System.out.println("verfadero");
+            return true;
+
+
+        } catch (SQLException e) {
+            e.printStackTrace(); // Manejo de errores
+            return false;
+        }
+    }
+
+
+    public boolean ingresarFacturaCabecera(String num, String fecha, float subtotal, float iva, float total, int cliId, int usuId) {
+        boolean state = false;
         Connection conn = null;
         PreparedStatement sentencia = null;
 
         try {
-            // Suponiendo que 'conn' es tu conexión a la base de datos
             conn = DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:xe", "c##jellz", "Jjwm20020");
-            conn.setAutoCommit(false); // Inicia la transacción
+            conn.setAutoCommit(false);
 
             // SQL query para insertar en VE_CABECERA_FACTURAS
-            String sqlCabecera = "INSERT INTO VE_CABECERA_FACTURAS (CAB_FAC_ID, CAB_FAC_NUMERO, CAB_FAC_FECHA, CAB_FAC_SUBTOTAL, CAB_FAC_IVA, CAB_FAC_VALOR_TOTAL, CLI_ID, USU_ID) VALUES (?, ?, TO_DATE(?, 'YYYY-MM-DD'), ?, ?, ?, ?, ?)";
+            String sqlCabecera = "INSERT INTO VE_CABECERA_FACTURAS (CAB_FAC_ID, CAB_FAC_NUMERO, CAB_FAC_FECHA, CAB_FAC_SUBTOTAL, CAB_FAC_IVA, CAB_FAC_VALOR_TOTAL, CLI_ID, USU_ID) VALUES (SEQ_VE_CABECERA_FACTURAS.NEXTVAL, ?, TO_DATE(?, 'YYYY-MM-DD'), ?, ?, ?, ?, ?)";
             sentencia = conn.prepareStatement(sqlCabecera);
-            sentencia.setInt(1, id);
-            sentencia.setString(2, num);
-            sentencia.setString(3, fecha);
-            sentencia.setFloat(4, subtotal);
-            sentencia.setFloat(5, iva);
-            sentencia.setFloat(6, total);
-            sentencia.setInt(7, cliId);
-            sentencia.setInt(8, usuId);
+            sentencia.setString(1, num);
+            sentencia.setString(2, fecha);
+            sentencia.setFloat(3, subtotal);
+            sentencia.setFloat(4, iva);
+            sentencia.setFloat(5, total);
+            sentencia.setInt(6, cliId);
+            sentencia.setInt(7, usuId);
 
             int rowsAffected = sentencia.executeUpdate();
 
-            // Comprobar si la inserción fue exitosa
             if (rowsAffected > 0) {
-                // Inserción en VE_DETALLE_FACTURAS
-                String sqlDetalle = "INSERT INTO VE_DETALLE_FACTURAS (DET_FAC_ID, DET_FAC_CANTIDAD, DET_FAC_PRECIO_UNITARIO, DET_FAC_SUBTOTAL, DET_FAC_IVA, DET_FAC_TOTAL, CAB_FAC_ID, SER_ID) VALUES (SEQ_VE_DETALLE_FACTURAS.NEXTVAL, ?, ?, ?, ?, ?, ?, ?)";
-                sentencia = conn.prepareStatement(sqlDetalle);
-                sentencia.setInt(1, cantidad);
-                sentencia.setFloat(2, precio_uni);
-                sentencia.setFloat(3, subtotal_detalle);
-                sentencia.setFloat(4, iva);
-                sentencia.setFloat(5, total);
-                sentencia.setInt(6, id); // Asegura que el CAB_FAC_ID coincida
-                sentencia.setInt(7, ser_id);
-
-                int rowsAffectedDetalle = sentencia.executeUpdate();
-
-                if (rowsAffectedDetalle > 0) {
-                    conn.commit(); // Confirma la transacción
-                    JOptionPane.showMessageDialog(null, "Se ha ingresado la factura exitosamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
-                    state = true;
-                } else {
-                    conn.rollback(); // Deshace la transacción en caso de error
-                    JOptionPane.showMessageDialog(null, "ERROR: No se ha ingresado el detalle de la factura", "ERROR", JOptionPane.ERROR_MESSAGE);
-                }
+                conn.commit();
+                JOptionPane.showMessageDialog(null, "Se ha ingresado la factura exitosamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
+                state = true;
             } else {
-                conn.rollback(); // Deshace la transacción en caso de error
+                conn.rollback();
                 JOptionPane.showMessageDialog(null, "ERROR: No se ha ingresado la factura", "ERROR", JOptionPane.ERROR_MESSAGE);
             }
         } catch (SQLException ex) {
             if (conn != null) {
                 try {
-                    conn.rollback(); // Deshace la transacción en caso de excepción
+                    conn.rollback();
                 } catch (SQLException e) {
                     Logger.getLogger(Operaciones.class.getName()).log(Level.SEVERE, null, e);
                 }
@@ -1388,6 +1602,68 @@ public class Operaciones {
                     conn.close();
                 } catch (SQLException e) {
                     Logger.getLogger(Operaciones.class.getName()).log(Level.SEVERE, null, e);
+                }
+            }
+        }
+
+        return state;
+    }
+
+
+
+    public boolean ingresarFacturaDetalles(float cant,float precioUn, float subtotal, float iva, float total, int cabId, int serId) {
+        boolean state = false;
+        Connection conn = null;
+        PreparedStatement sentencia = null;
+
+        try {
+            conn = DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:xe", "c##jellz", "Jjwm20020");
+            conn.setAutoCommit(false);
+
+            // SQL query para insertar en VE_DETALLE_FACTURAS
+            String sqlCabecera ="INSERT INTO VE_DETALLE_FACTURAS (det_fac_id, det_fac_cantidad, det_fac_precio_unitario, det_fac_subtotal, det_fac_iva, det_fac_total, cab_fac_id, ser_id) VALUES (SEQ_VE_DETALLE_FACTURAS.NEXTVAL, ?,?, ?, ?,?,?,?)";
+            sentencia = conn.prepareStatement(sqlCabecera);
+            // Establecer parámetros correctos
+            sentencia.setFloat(1, cant); // Asumiendo que la cantidad se establece como 0
+            sentencia.setFloat(2, precioUn); // Asumiendo que el precio unitario se establece como 0
+            sentencia.setFloat(3, subtotal);
+            sentencia.setFloat(4, iva);
+            sentencia.setFloat(5, total);
+            sentencia.setInt(6, cabId);
+            sentencia.setInt(7, serId);
+
+            int rowsAffected = sentencia.executeUpdate();
+
+            if (rowsAffected > 0) {
+                conn.commit();
+               // JOptionPane.showMessageDialog(null, "Se ha ingresado la factura exitosamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
+                state = true;
+            } else {
+                conn.rollback();
+                JOptionPane.showMessageDialog(null, "ERROR: No se ha ingresado la factura", "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLException ex) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException e) {
+                    Logger.getLogger(Operaciones.class.getName()).log(Level.SEVERE, "Error durante el rollback", e);
+                }
+            }
+            Logger.getLogger(Operaciones.class.getName()).log(Level.SEVERE, "Error durante la inserción de la factura", ex);
+        } finally {
+            if (sentencia != null) {
+                try {
+                    sentencia.close();
+                } catch (SQLException e) {
+                    Logger.getLogger(Operaciones.class.getName()).log(Level.SEVERE, "Error al cerrar la sentencia", e);
+                }
+            }
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    Logger.getLogger(Operaciones.class.getName()).log(Level.SEVERE, "Error al cerrar la conexión", e);
                 }
             }
         }

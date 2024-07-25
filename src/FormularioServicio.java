@@ -47,6 +47,9 @@ public class FormularioServicio extends JFrame implements ActionListener {
         txtId = new JTextField();
         txtId.setSize(120,25);
         txtId.setLocation(65,20);
+        String id = String.valueOf(op.obtenerNumServicio());
+        txtId.setText(id);
+        txtId.setEnabled(false);
         this.add(txtId);
 
         labNombre = new JLabel("Nombre:");
@@ -69,24 +72,8 @@ public class FormularioServicio extends JFrame implements ActionListener {
         txtPrecio.setLocation(65,80);
         this.add(txtPrecio);
 
-        estado = new JLabel("Estado:");
-        estado.setSize(90,25);
-        estado.setLocation(10,110);
-        this.add(estado);
 
-        activo = new JRadioButton("Activo");
-        activo.setSize(90,25);
-        activo.setLocation(65,110);
-        this.add(activo);
 
-        inactivo = new JRadioButton("Inactivo");
-        inactivo.setSize(90,25);
-        inactivo.setLocation(165,110);
-        this.add(inactivo);
-
-        grupoEstado = new ButtonGroup();
-        grupoEstado.add(activo);
-        grupoEstado.add(inactivo);
 
         iva = new JLabel("IVA:");
         iva.setSize(90,25);
@@ -140,15 +127,8 @@ public class FormularioServicio extends JFrame implements ActionListener {
             else{
                 iva = "N";
             }
-            String estadoo;
-            if(activo.isSelected()){
-                estadoo = "Activo";
 
-            }
-            else{
-                estadoo = "Desactivado";
-            }
-            estadoo = "Desactivado";
+            String estadoo = "Desactivado";
             boolean cerrar = op.agregarServicio(codigo,nombre,precio,iva,estadoo);
             if(cerrar==true){
                 this.setVisible(false);

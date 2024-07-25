@@ -7,6 +7,7 @@ public class ControlerMenuPrincipal {
     private ArrayList<String> empleados;
     Operaciones op = new Operaciones();
     Properties properties;
+    String usuarioU;
 
     public ControlerMenuPrincipal(int opcion, ViewMenuPrincipal vmp){
 
@@ -80,13 +81,19 @@ public class ControlerMenuPrincipal {
                 break;
 
             case 13:
-                formularioFactura ff = new formularioFactura(op);
+                //FormularioFactura ff = new FormularioFactura(op);
                 break;
 
             case 14:
                 break;
 
             case 15:
+                try {
+
+                    ListarFactura lf = new ListarFactura(op);
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
                 break;
 
             case 16:
@@ -122,6 +129,7 @@ public class ControlerMenuPrincipal {
                 break;
 
             case 21:
+                modificarServicio ms = new modificarServicio(op);
                 break;
             case 22:
                 borrarServicios bs = new borrarServicios(op);
@@ -137,5 +145,10 @@ public class ControlerMenuPrincipal {
                 // Handle other cases if needed
                 break;
         }
+    }
+
+    public void factura(String usuarioU){
+        this.usuarioU = usuarioU;
+        FormularioFactura ff = new FormularioFactura(op,usuarioU);
     }
 }
