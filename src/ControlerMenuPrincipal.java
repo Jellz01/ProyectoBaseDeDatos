@@ -15,7 +15,7 @@ public class ControlerMenuPrincipal {
         switch (opcion) {
             case 1:
                 try {
-                    formulariosIngresarPersona fip = new formulariosIngresarPersona(op);
+                    formularioEmpleado fe = new formularioEmpleado(op);
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
                 }

@@ -132,8 +132,7 @@ public class ViewMenuPrincipal extends JFrame implements ActionListener {
         listarAnimal = new JMenuItem("Listar");
         listarAnimal.addActionListener(this);
         animales.add(ingresarAnimal);
-        animales.add(borrarAnimal);
-        animales.add(modificarAnimal);
+
         animales.add(listarAnimal);
 
 

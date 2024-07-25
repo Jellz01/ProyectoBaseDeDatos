@@ -17,7 +17,7 @@ public class listarClientes extends JFrame implements ActionListener {
     private JRadioButton finInicio;
 
     // ATRIBUTOS PARA LA TABLA
-    private final String nombresColumnas[] = {"ID", "Nombre", "Apellido", "Direccion", "Teléfono", "Correo"};
+    private final String nombresColumnas[] = {"ID", "Nombre", "Apellido", "Dirección", "Teléfono", "Correo"};
     private JTable tabla;
     private JScrollPane scrollDatos;
 
@@ -48,13 +48,13 @@ public class listarClientes extends JFrame implements ActionListener {
 
         for (int i = 0; i < clienteList.size(); i++) {
             String clienteData = clienteList.get(i);
-            // Assuming clienteData is a comma-separated string
-            String[] clienteDetails = clienteData.split(", ");
+            // Assuming clienteData is tab-separated
+            String[] clienteDetails = clienteData.trim().split("\\s+"); // Adjusted to split by whitespace
             datos[i][0] = clienteDetails[0]; // ID
             datos[i][1] = clienteDetails[1]; // Nombre
             datos[i][2] = clienteDetails[2]; // Apellido
-            datos[i][3] = clienteDetails[3]; // Direccion
-            datos[i][4] = clienteDetails[4]; // Telefono
+            datos[i][3] = clienteDetails[3]; // Dirección
+            datos[i][4] = clienteDetails[4]; // Teléfono
             datos[i][5] = clienteDetails[5]; // Correo
         }
 

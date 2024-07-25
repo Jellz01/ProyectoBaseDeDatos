@@ -115,13 +115,14 @@ public class formularioModificarPersona extends JFrame implements ActionListener
             String nombre = txtNombre.getText();
             String apellido = txtApellido.getText();
             String telefono = txtDireccion.getText();
-            String salario = txtSalario.getText();
+            String email = txtSalario.getText();
             int idContratos = contratos.getSelectedIndex();
+
             int idContrato = idContratos+1;
 
 
 
-          // boolean estado = op.agregarEmpleado(cedula, nombre, apellido, telefono, salario,"caca");
+           //boolean estado = op.agregarEmpleado(cedula, nombre, apellido, telefono, salario,email);
 
 
 

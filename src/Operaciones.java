@@ -260,19 +260,37 @@ public class Operaciones {
             Date parsedDate = sdf.parse(fechaHoraStr);
             Timestamp fechaHora = new Timestamp(parsedDate.getTime());
 
-            PreparedStatement sentencia = conn.prepareStatement(
-                    "INSERT INTO VE_CITAS (CIT_ID, CIT_NOMBRE_MASCOTA, CIT_FECHA_HORA, CIT_ESTADO, CLI_ID, EMP_ID, MAS_ID) " +
-                            "VALUES (SEQ_VE_CITAS.NEXTVAL, ?, ?, ?, ?, ?, ?)"
-            );
+            // Verificar si ya existe una cita en el mismo horario para el mismo veterinario con estado 'Scheduled'
+            String checkQuery = "SELECT COUNT(*) FROM VE_CITAS WHERE EMP_ID = ? AND CIT_FECHA_HORA = ? AND CIT_ESTADO = 'Scheduled'";
+            PreparedStatement checkStmt = conn.prepareStatement(checkQuery);
+            checkStmt.setInt(1, empleadoId);
+            checkStmt.setTimestamp(2, fechaHora);
 
-            sentencia.setString(1, nombreMascota);
-            sentencia.setTimestamp(2, fechaHora);
-            sentencia.setString(3, estado);
-            sentencia.setInt(4, clienteId);
-            sentencia.setInt(5, empleadoId);
-            sentencia.setInt(6, mascotaId);
+            ResultSet rs = checkStmt.executeQuery();
+            rs.next();
+            int count = rs.getInt(1);
+            rs.close();
+            checkStmt.close();
 
-            int rowsAffected = sentencia.executeUpdate();
+            // Solo mostrar mensaje de error si ya hay una cita programada en el mismo horario
+            if (count > 0 && estado.equals("Scheduled")) {
+                JOptionPane.showMessageDialog(null, "Ya existe una cita para este veterinario en el mismo horario.", "ERROR", JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+
+            // Si no hay citas existentes o el estado es 'Cancelado', proceder con la inserción
+            String insertQuery = "INSERT INTO VE_CITAS (CIT_ID, CIT_NOMBRE_MASCOTA, CIT_FECHA_HORA, CIT_ESTADO, CLI_ID, EMP_ID, MAS_ID) " +
+                    "VALUES (SEQ_VE_CITAS.NEXTVAL, ?, ?, ?, ?, ?, ?)";
+            PreparedStatement insertStmt = conn.prepareStatement(insertQuery);
+
+            insertStmt.setString(1, nombreMascota);
+            insertStmt.setTimestamp(2, fechaHora);
+            insertStmt.setString(3, estado);
+            insertStmt.setInt(4, clienteId);
+            insertStmt.setInt(5, empleadoId);
+            insertStmt.setInt(6, mascotaId);
+
+            int rowsAffected = insertStmt.executeUpdate();
 
             if (rowsAffected > 0) {
                 JOptionPane.showMessageDialog(null, "Cita agregada correctamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
@@ -281,7 +299,8 @@ public class Operaciones {
                 JOptionPane.showMessageDialog(null, "No se pudo agregar la cita", "ERROR", JOptionPane.ERROR_MESSAGE);
             }
 
-            sentencia.close();
+            insertStmt.close();
+
         } catch (ParseException e) {
             JOptionPane.showMessageDialog(null, "ERROR: El formato de la fecha y hora es incorrecto.", "ERROR", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
@@ -291,6 +310,8 @@ public class Operaciones {
 
         return state;
     }
+
+
 
     public boolean verificarExistencia(int clienteId, int empleadoId, int mascotaId) throws SQLException {
         String query = "SELECT 1 FROM VE_CLIENTES WHERE CLI_ID = ? UNION ALL " +
@@ -312,34 +333,45 @@ public class Operaciones {
     public boolean agregarTipoAnimal(String tipo) {
         boolean state = false;
 
+        // Convertir el tipo de animal a mayúsculas
+        tipo = tipo.toUpperCase();
+
         try {
-            PreparedStatement sentencia = conn.prepareStatement("INSERT INTO VE_TIPO_MASCOTAS VALUES (SEQ_VE_PERSONAS.NEXTVAL,?)");
+            // Verificar si el tipo de animal ya existe en mayúsculas
+            PreparedStatement checkStmt = conn.prepareStatement("SELECT COUNT(*) FROM VE_TIPO_MASCOTAS WHERE UPPER(MAS_NOMBRE) = ?");
+            checkStmt.setString(1, tipo);
+            ResultSet rs = checkStmt.executeQuery();
 
-            sentencia.setString(1, tipo);
+            if (rs.next() && rs.getInt(1) > 0) {
+                JOptionPane.showMessageDialog(null, "El tipo de animal ya existe.", "ERROR", JOptionPane.ERROR_MESSAGE);
+                return state; // Salir del método si el tipo de animal ya existe
+            }
+            rs.close();
+            checkStmt.close();
 
+            // Insertar el nuevo tipo de animal en mayúsculas
+            PreparedStatement insertStmt = conn.prepareStatement("INSERT INTO VE_TIPO_MASCOTAS (MAS_ID, MAS_NOMBRE) VALUES (SEQ_VE_PERSONAS.NEXTVAL, ?)");
+            insertStmt.setString(1, tipo);
 
-            int rowsAffected = sentencia.executeUpdate();
+            int rowsAffected = insertStmt.executeUpdate();
 
             if (rowsAffected > 0) {
-                JOptionPane.showMessageDialog(null, "Se ingreso un tipo de animal correctamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(null, "Se ingresó un tipo de animal correctamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
                 state = true;
             } else {
-                JOptionPane.showMessageDialog(null, "NO Se ingreso un tipo de animal ERROR", "ERROR", JOptionPane.ERROR);
+                JOptionPane.showMessageDialog(null, "No se ingresó un tipo de animal. ERROR", "ERROR", JOptionPane.ERROR_MESSAGE);
             }
 
-            sentencia.close();
+            insertStmt.close();
         } catch (SQLIntegrityConstraintViolationException duplicateKeyException) {
-            JOptionPane.showMessageDialog(null, "ERROR:Ya existe es TIPO de animal.", "ERROR", JOptionPane.ERROR_MESSAGE);
-            // Handle the exception as needed, log, or perform additional actions
+            JOptionPane.showMessageDialog(null, "ERROR: Ya existe este tipo de animal.", "ERROR", JOptionPane.ERROR_MESSAGE);
             duplicateKeyException.printStackTrace();
         } catch (SQLException ex) {
             Logger.getLogger(Operaciones.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-
         return state;
     }
-
 
     private void closeResources(AutoCloseable... resources) {
         for (AutoCloseable resource : resources) {
@@ -478,6 +510,7 @@ public class Operaciones {
         return idResultado;
     }
 
+
     public int obtenerIDCliente(String cliente) {
         // Assuming `cliente` has the format "Nombre Apellido"
         // Split the string by space and take the first part
@@ -537,24 +570,21 @@ public class Operaciones {
     }
 
 
-    public int obtenerIDEmpleado(String empleado) {
-        // Assuming `empleado` has the format "Nombre Apellido"
-        // Split the string by space and take the first part
-        String nombre = empleado.split(" ")[0];
-
+    public int obtenerIDEmpleado(String cedula) {
         int idResultado = -1; // Default value or use another sentinel value
 
         try {
-            String query = "SELECT VE_EMPLEADOS.EMP_ID FROM VE_EMPLEADOS JOIN VE_PERSONAS ON VE_EMPLEADOS.EMP_ID = VE_PERSONAS.PER_ID WHERE VE_PERSONAS.PER_NOMBRE LIKE ?";
+            // La consulta SQL correcta para obtener el EMP_ID usando PER_CEDULA
+            String query = "SELECT VE_EMPLEADOS.EMP_ID FROM VE_EMPLEADOS JOIN VE_PERSONAS ON VE_EMPLEADOS.PER_ID = VE_PERSONAS.PER_ID WHERE VE_PERSONAS.PER_CEDULA = ?";
             try (PreparedStatement statement = this.conn.prepareStatement(query)) {
-                statement.setString(1, nombre + "%");
+                statement.setString(1, cedula);
 
                 try (ResultSet resultSet = statement.executeQuery()) {
                     if (resultSet.next()) {
                         idResultado = resultSet.getInt("EMP_ID");
                         System.out.println("ID encontrado: " + idResultado);
                     } else {
-                        System.out.println("No se encontró ningún registro con el nombre: " + nombre);
+                        System.out.println("No se encontró ningún registro con la cédula: " + cedula);
                     }
                 }
             }
@@ -1125,6 +1155,31 @@ public class Operaciones {
         return state;
     }
 
+    public boolean cancelarCita(int id) {
+        boolean state = false;
+
+        // Query para eliminar el servicio
+        String deleteQuery = "UPDATE VE_CITAS SET CIT_ESTADO = 'Cancelado' WHERE CIT_ID = ?";
+
+        try (PreparedStatement deleteStmt = conn.prepareStatement(deleteQuery)) {
+            deleteStmt.setInt(1,id);
+            int rowsAffected = deleteStmt.executeUpdate();
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(null, "Consulta cancelado", "INFO", JOptionPane.INFORMATION_MESSAGE);
+                state = true;
+            } else {
+                JOptionPane.showMessageDialog(null, "no se pudo cancelar", "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Servicio no se pudo eliminar, modifquelo , presente en una factura", "ERROR", JOptionPane.ERROR_MESSAGE);
+
+            // Manejar la excepción según sea necesario
+        }
+
+        return state;
+    }
+
 
     public ArrayList<String> obtenerEmpleados() {
         ArrayList<String> listaEmpleados = new ArrayList<>();
@@ -1431,11 +1486,10 @@ public class Operaciones {
                     String fechaCita = resultSet.getString("Fecha_Cita");
 
                     // Create a string representation of the appointment details
-                    String datosCita = citaId + " " + nombrePerro ;
+                    String datosCita = citaId + "|" + nombrePerro + "|" + fechaCita;
 
                     // Add the string representation to the list
                     listaCitas.add(datosCita);
-                    System.out.println(datosCita);
                 }
             }
         } catch (SQLException ex) {
@@ -1445,6 +1499,7 @@ public class Operaciones {
 
         return listaCitas;
     }
+
 
 
     public ArrayList<String> obtenerUsuarios() {
@@ -1776,11 +1831,13 @@ public class Operaciones {
                     String perCorreo = resultSet.getString("per_correo_electronico");
 
                     // Create a string representation of the client details
-                    String datosCliente = "ID: " + perId + ", Nombre: " + perNombre +
-                            ", Apellido: " + perApellido + ", Direccion: " + perDireccion +
-                            ", Telefono: " + perTelefono + ", Correo: " + perCorreo;
+                    String datosCliente = "\t" + perId + "\t " + perNombre +
+                            "\t " + perApellido + "\t" + perDireccion +
+                            "\t " + perTelefono + "\t" + perCorreo;
 
+                    // Add the client details to the list
                     listaClientes.add(datosCliente);
+
                 }
             }
         } catch (SQLException ex) {
