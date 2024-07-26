@@ -1,137 +1,128 @@
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
-import javax.swing.table.TableRowSorter;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class ListarFactura extends JFrame implements ActionListener {
 
-    // ATRIBUTOS PARA RADIO BUTTONS
-    private JPanel panelNorte;
-    private ButtonGroup tipoListado;
-    private JRadioButton inicioFin;
-    private JRadioButton finInicio;
-
     // ATRIBUTOS PARA LAS TABLAS
-    private final String[] nombresColumnasFacturas = {"Id Factura", "Nombre Cliente", "Fecha"};
-    private final String[] nombresColumnasDetalles = {"Servicio", "Precio Unitario", "IVA", "Cantidad", "Subtotal"};
+    private DefaultTableModel tableModelFacturas;
     private JTable tablaFacturas;
-    private JTable tablaDetalles;
     private JScrollPane scrollFacturas;
+    private DefaultTableModel tableModelDetalles;
+    private JTable tablaDetalles;
     private JScrollPane scrollDetalles;
+    private JButton verDetalles;
+    private JButton cancelar;
 
     private Operaciones op;
 
-    ListarFactura(Operaciones op) throws SQLException {
+    public ListarFactura(Operaciones op) throws SQLException {
         this.op = op;
-
         op.conectar();
-        super.setLayout(new BorderLayout());
+        super.setLayout(null);
 
-        // RADIO BUTTON PARTE SUPERIOR
-        panelNorte = new JPanel();
-        tipoListado = new ButtonGroup();
-        inicioFin = new JRadioButton("De inicio a fin");
-        inicioFin.addActionListener(this);
-        finInicio = new JRadioButton("De fin a inicio");
-        finInicio.addActionListener(this);
-        tipoListado.add(inicioFin);
-        tipoListado.add(finInicio);
-        panelNorte.add(inicioFin);
-        panelNorte.add(finInicio);
-        this.add(panelNorte, BorderLayout.NORTH);
+        // Inicializar el modelo de la tabla y la JTable para facturas
+        tableModelFacturas = new DefaultTableModel(
+                new String[]{"Número de Factura", "Precio Total", "Fecha", "Empleado"},
+                0);
+        tablaFacturas = new JTable(tableModelFacturas);
+        scrollFacturas = new JScrollPane(tablaFacturas);
+        scrollFacturas.setSize(900, 150);
+        scrollFacturas.setLocation(20, 40);
+        this.add(scrollFacturas);
 
-        // TABLA CON FACTURAS
-        ArrayList<String> facturaList = op.obtenerFacturas(9); // Handle the exception as needed
+        // Inicializar el modelo de la tabla y la JTable para detalles de factura
+        tableModelDetalles = new DefaultTableModel(
+                new String[]{"Factura ID", "Servicio", "Precio Unitario", "IVA", "Cantidad",
+                        "Subtotal", "Total Detalle", "Total Factura"},
+                0);
+        tablaDetalles = new JTable(tableModelDetalles);
+        scrollDetalles = new JScrollPane(tablaDetalles);
+        scrollDetalles.setSize(900, 150);
+        scrollDetalles.setLocation(20, 200);
+        this.add(scrollDetalles);
 
-        Object[][] datosFacturas = new Object[facturaList.size()][3]; // Ajustado a 3 columnas
-
-        for (int i = 0; i < facturaList.size(); i++) {
-            String[] facturaDetails = facturaList.get(i).split(", ");
-            datosFacturas[i][0] = facturaDetails[0].split(": ")[1]; // ID Factura
-            datosFacturas[i][1] = facturaDetails[1].split(": ")[1]; // Nombre Cliente
-            datosFacturas[i][2] = facturaDetails[2].split(": ")[1]; // Fecha
+        // Cargar datos en la tabla de facturas
+        ArrayList<String> facturaList = op.obtenerFacturasListado();
+        for (String factura : facturaList) {
+            String[] facturaDetails = factura.split(", ");
+            if (facturaDetails.length >= 4) {
+                tableModelFacturas.addRow(new Object[]{
+                        facturaDetails[0].split(": ")[1], // Número de Factura
+                        facturaDetails[1].split(": ")[1], // Precio Total
+                        facturaDetails[2].split(": ")[1], // Fecha
+                        facturaDetails[3].split(": ")[1]  // Empleado
+                });
+            }
         }
 
-        TableModel modeloFacturas = new DefaultTableModel(datosFacturas, nombresColumnasFacturas); // MODELO
-        tablaFacturas = new JTable(modeloFacturas); // TABLA
-        tablaFacturas.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tablaFacturas.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                int selectedRow = tablaFacturas.getSelectedRow();
-                if (selectedRow >= 0) {
-                    String idFacturaSeleccionada = (String) tablaFacturas.getValueAt(selectedRow, 0);
-                    mostrarDetallesFactura(idFacturaSeleccionada);
-                }
-            }
-        });
-        TableRowSorter<TableModel> ordenamientoFacturas = new TableRowSorter<>(modeloFacturas); // ORDENAMIENTO
-        tablaFacturas.setRowSorter(ordenamientoFacturas);
-        scrollFacturas = new JScrollPane(tablaFacturas); // PANEL CON SCROLL
-        this.add(scrollFacturas, BorderLayout.WEST);
+        // Botón para ver los detalles de la factura seleccionada
+        verDetalles = new JButton("Ver Detalles");
+        verDetalles.setSize(150, 25);
+        verDetalles.setLocation(40, 370);
+        verDetalles.addActionListener(this);
+        this.add(verDetalles);
 
-        // TABLA CON DETALLES DE FACTURA (VACIA INICIALMENTE)
-        Object[][] datosDetalles = new Object[0][5]; // Inicialmente vacío
+        // Botón para cancelar la selección y cerrar la ventana
+        cancelar = new JButton("Cancelar");
+        cancelar.setSize(120, 25);
+        cancelar.setLocation(200, 370);
+        cancelar.addActionListener(this);
+        this.add(cancelar);
 
-        TableModel modeloDetalles = new DefaultTableModel(datosDetalles, nombresColumnasDetalles); // MODELO
-        tablaDetalles = new JTable(modeloDetalles); // TABLA
-        TableRowSorter<TableModel> ordenamientoDetalles = new TableRowSorter<>(modeloDetalles); // ORDENAMIENTO
-        tablaDetalles.setRowSorter(ordenamientoDetalles);
-        scrollDetalles = new JScrollPane(tablaDetalles); // PANEL CON SCROLL
-        this.add(scrollDetalles, BorderLayout.CENTER);
-
-        // CONFIGURACIONES GENERALES DEL FORMULARIO
-        super.setTitle("Listado de Facturas"); // TITULO VENTANA
-        super.setSize(1200, 600); // TAMAÑO
-        super.setLocationRelativeTo(null); // CENTRAR
-        super.setResizable(true); // PERMITIR CAMBIAR TAMAÑO
-        super.setVisible(true); // VISIBILIZA
+        this.setTitle("Listado de Facturas");
+        this.setSize(950, 470);
+        this.setLocationRelativeTo(null);
+        this.setResizable(false);
+        this.setVisible(true);
     }
 
-    private void mostrarDetallesFactura(String idFactura) {
-        try {
-            ArrayList<String> detalleList = op.obtenerFacturas(Integer.parseInt(idFactura));
-            Object[][] datosDetalles = new Object[detalleList.size()][5];
-
-            for (int i = 0; i < detalleList.size(); i++) {
-                String detalle = detalleList.get(i);
-                String[] detalles = detalle.split(", ");
-
-                // Split each detail based on the expected format
-                String servicio = detalles[4].split(": ")[1];
-                String precioUnitario = detalles[5].split(": ")[1];
-                String iva = detalles[6].split(": ")[1];
-                String cantidad = detalles[7].split(": ")[1];
-                String subtotal = detalles[8].split(": ")[1];
-
-                datosDetalles[i][0] = servicio;
-                datosDetalles[i][1] = precioUnitario;
-                datosDetalles[i][2] = iva;
-                datosDetalles[i][3] = cantidad;
-                datosDetalles[i][4] = subtotal;
-            }
-
-            TableModel modeloDetalles = new DefaultTableModel(datosDetalles, nombresColumnasDetalles);
-            tablaDetalles.setModel(modeloDetalles);
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Error al obtener detalles de la factura: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
+    @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == inicioFin) {
-            System.out.println("Pulso primer radio button");
-            // Implement sorting or other functionality here
-        }
-        if (e.getSource() == finInicio) {
-            System.out.println("Pulso segundo radio button");
-            // Implement sorting or other functionality here
+        if (e.getSource() == verDetalles) {
+            int selectedRow = tablaFacturas.getSelectedRow();
+            if (selectedRow >= 0) {
+                // Obtener el ID de la factura seleccionada
+                String numeroFactura = (String) tableModelFacturas.getValueAt(selectedRow, 0);
+                System.out.println("Factura ID seleccionada: " + numeroFactura);
+
+                // Limpiar la tabla de detalles
+                tableModelDetalles.setRowCount(0);
+
+                // Obtener los detalles de la factura seleccionada
+                ArrayList<String> detallesFacturaList = null;
+                try {
+                    detallesFacturaList = op.obtenerDetallesFactura(Integer.parseInt(numeroFactura));
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(this, "Error al obtener detalles de la factura.");
+                    return;
+                }
+
+                for (String detalle : detallesFacturaList) {
+                    System.out.println("Detalle: " + detalle); // Para depuración
+                    String[] detalleDetails = detalle.split(", ");
+                    if (detalleDetails.length >= 7) {
+                        tableModelDetalles.addRow(new Object[]{
+                                detalleDetails[0].split(": ")[1], // Factura ID
+                                detalleDetails[1].split(": ")[1], // Servicio
+                                detalleDetails[2].split(": ")[1], // Precio Unitario
+                                detalleDetails[3].split(": ")[1], // IVA
+                                detalleDetails[4].split(": ")[1], // Cantidad
+                                detalleDetails[5].split(": ")[1], // Subtotal
+                                detalleDetails[6].split(": ")[1], // Total Detalle
+                                detalleDetails[7].split(": ")[1]  // Total Factura
+                        });
+                    }
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Por favor, seleccione una factura para ver detalles.");
+            }
+        } else if (e.getSource() == cancelar) {
+            this.setVisible(false);
         }
     }
-
-
 }

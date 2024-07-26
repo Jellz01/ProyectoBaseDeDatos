@@ -1401,6 +1401,93 @@ public class Operaciones {
     }
 
 
+
+
+    public ArrayList<String> obtenerFacturasListado() {
+        ArrayList<String> listaFacturas = new ArrayList<>();
+
+        try {
+            String query = "SELECT \n" +
+                    "    f.CAB_FAC_NUMERO AS \"Número de Factura\",\n" +
+                    "    f.CAB_FAC_VALOR_TOTAL AS \"Precio Total\",\n" +
+                    "    f.CAB_FAC_FECHA AS \"Fecha\",\n" +
+                    "    p.PER_NOMBRE || ' ' || p.PER_APELLIDO AS \"Empleado\"\n" +
+                    "FROM \n" +
+                    "    VE_CABECERA_FACTURAS f\n" +
+                    "JOIN \n" +
+                    "    VE_PERSONAS p ON f.USU_ID = p.PER_ID\n" +
+                    "WHERE \n" +
+                    "    p.PER_ID = f.USU_ID";
+            try (PreparedStatement statement = conn.prepareStatement(query);
+                 ResultSet resultSet = statement.executeQuery()) {
+
+                while (resultSet.next()) {
+                    // Retrieve data from the result set
+                    String numeroFactura = resultSet.getString("Número de Factura");
+                    String precioTotal = resultSet.getString("Precio Total");
+                    String fecha = resultSet.getString("Fecha");
+                    String empleado = resultSet.getString("Empleado");
+
+                    // Create a string representation of the invoice details
+                    String datosFactura = "Número de Factura: " + numeroFactura +
+                            ", Precio Total: " + precioTotal +
+                            ", Fecha: " + fecha +
+                            ", Empleado: " + empleado;
+
+                    // Add the string representation to the list
+                    listaFacturas.add(datosFactura);
+                    System.out.println(datosFactura);
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Handle the exception as needed
+        }
+
+        return listaFacturas;
+    }
+
+    public ArrayList<String> obtenerDetallesFactura(int facturaId) throws SQLException {
+        ArrayList<String> listaDetalles = new ArrayList<>();
+
+        // Consulta SQL corregida
+        String query = "SELECT " +
+                "cab.CAB_FAC_ID AS Factura_ID, " +
+                "ser.SER_NOMBRE AS Servicio, " +
+                "det.DET_FAC_CANTIDAD AS Cantidad, " +
+                "det.DET_FAC_PRECIO_UNITARIO AS Precio_Unitario, " +
+                "det.DET_FAC_SUBTOTAL AS Subtotal, " +
+                "det.DET_FAC_IVA AS IVA, " +
+                "det.DET_FAC_TOTAL AS Total_Detalle, " +
+                "det.DET_FAC_TOTAL AS Total_Factura " +
+                "FROM VE_CABECERA_FACTURAS cab " +
+                "JOIN VE_DETALLE_FACTURAS det ON cab.CAB_FAC_ID = det.CAB_FAC_ID " +
+                "JOIN VE_SERVICIOS ser ON det.SER_ID = ser.SER_ID " +
+                "WHERE cab.CAB_FAC_ID = ?"; // Usar ? para parámetros
+
+        try (PreparedStatement statement = conn.prepareStatement(query)) {
+            statement.setInt(1, facturaId); // Establecer el parámetro de la consulta
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    String facturaDetails = "Factura ID: " + resultSet.getString("Factura_ID") +
+                            ", Servicio: " + resultSet.getString("Servicio") +
+                            ", Precio Unitario: " + resultSet.getString("Precio_Unitario") +
+                            ", IVA: " + resultSet.getString("IVA") +
+                            ", Cantidad: " + resultSet.getString("Cantidad") +
+                            ", Subtotal: " + resultSet.getString("Subtotal") +
+                            ", Total Detalle: " + resultSet.getString("Total_Detalle") +
+                            ", Total Factura: " + resultSet.getString("Total_Factura");
+
+                    listaDetalles.add(facturaDetails);
+                }
+            }
+        }
+
+        return listaDetalles;
+    }
+
+
+
     public ArrayList<String> obtenerFacturas(int cabeceraID) {
         ArrayList<String> listaFacturas = new ArrayList<>();
 

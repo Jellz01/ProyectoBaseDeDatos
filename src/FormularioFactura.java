@@ -385,6 +385,7 @@ public class FormularioFactura extends JFrame implements ActionListener {
             if (estadoCabecera && estadoDetalles) {
                 JOptionPane.showMessageDialog(this, "Factura registrada exitosamente.");
                 ArrayList<String> contenidos = op.obtenerFacturas(numFactura);
+
                 SendEmail se = new SendEmail(properties, email, contenidos);
                 this.setVisible(false);
             } else {
