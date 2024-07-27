@@ -2059,7 +2059,34 @@ public class Operaciones {
     }
 
 
+    public String[] obtenerDatosClientePorCedula(String cedula) {
+        // Initialize the data string
+        String[] datos = new String[3]; // Array to hold name, address, and email
 
+        // SQL query to select data based on cedula
+        String query = "SELECT PER_NOMBRE, PER_DIRECCION, PER_CORREO_ELECTRONICO FROM VE_PERSONAS WHERE PER_CEDULA = ?";
+
+        try (PreparedStatement statement = conn.prepareStatement(query)) {
+            // Set the parameter for the PreparedStatement
+            statement.setString(1, cedula);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    // Retrieve the data from the result set
+                    datos[0] = resultSet.getString("PER_NOMBRE");
+                    datos[1] = resultSet.getString("PER_DIRECCION");
+                    datos[2] = resultSet.getString("PER_CORREO_ELECTRONICO");
+                }
+
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Handle the exception as needed
+        }
+
+        // Return the data array
+        return datos;
+    }
 
 }
 

@@ -1,5 +1,17 @@
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.*;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Properties;
+
+import static java.lang.Integer.parseInt;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
@@ -11,9 +23,9 @@ import static java.lang.Integer.parseInt;
 
 public class FormularioFactura extends JFrame implements ActionListener {
 
-    // Variables para la interfaz
+    // Variables for the interface
     private JTextField txtNum, txtFecha, txtCliente, txtDireccion, txtEmail, txtUsuario, txtCedula, txtSubT, txtIva, txtTotal;
-    private JButton btnSelectClient, botGrabar, botCancelar;
+    private JButton btnSelectClient, btnSearchCedula, botGrabar, botCancelar;
     private JTable productTable;
     private DefaultTableModel tableModel;
     private Operaciones op;
@@ -88,6 +100,13 @@ public class FormularioFactura extends JFrame implements ActionListener {
         txtCedula.setBounds(100, 95, 200, 25);
         txtCedula.setEnabled(false);
         this.add(txtCedula);
+
+        // Add Search Button next to Cedula field
+        ImageIcon searchIcon = new ImageIcon("path/to/search/icon.png"); // Provide the path to the search icon
+        btnSearchCedula = new JButton(searchIcon);
+        btnSearchCedula.setBounds(310, 95, 30, 25);
+        btnSearchCedula.addActionListener(e -> showSearchDialog());
+        this.add(btnSearchCedula);
 
         JLabel labDireccion = new JLabel("Dirección:");
         labDireccion.setBounds(10, 125, 90, 25);
@@ -210,31 +229,69 @@ public class FormularioFactura extends JFrame implements ActionListener {
         selectButton.addActionListener(e -> {
             int selectedRow = clientTable.getSelectedRow();
             if (selectedRow != -1) {
-                String clienteSeleccionado = (String) clientTableModel.getValueAt(selectedRow, 0);
-                txtCliente.setText(clienteSeleccionado);
-                String cedula = op.obtenerCedulaCliente(clienteSeleccionado); // Obtain Cedula
-
-                String direccion = op.obtenerDireccion(cedula);
-                if (direccion == null || direccion.trim().isEmpty()) {
-                    direccion = "Dirección no disponible";
-                }
-
-                String email = op.obtenerEmailCliente(clienteSeleccionado);
-
-
-                txtDireccion.setText(direccion);
-                txtEmail.setText(email);
-                txtCedula.setText(cedula); // Set Cedula
-
-                clientDialog.dispose();
-            } else {
-                JOptionPane.showMessageDialog(this, "Por favor, seleccione un cliente.");
+                String selectedClient = (String) clientTableModel.getValueAt(selectedRow, 0);
+                txtCliente.setText(selectedClient);
+                txtCedula.setText(op.obtenerCedulaCliente(selectedClient));
+                txtDireccion.setText(op.obtenerDireccion(selectedClient));
+                txtEmail.setText(op.obtenerEmailCliente(selectedClient));
             }
+            clientDialog.dispose();
         });
         clientDialog.add(selectButton);
 
         clientDialog.setVisible(true);
     }
+
+
+    private void showSearchDialog() {
+        JDialog searchDialog = new JDialog(this, "Buscar Cliente por Cédula", true);
+        searchDialog.setSize(400, 200);
+        searchDialog.setLocationRelativeTo(this);
+        searchDialog.setLayout(new BorderLayout());
+
+        // Panel para la búsqueda
+        JPanel searchPanel = new JPanel();
+        searchPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+
+        JLabel searchLabel = new JLabel("Ingrese la Cédula:");
+        searchPanel.add(searchLabel);
+
+        JTextField searchField = new JTextField(15);
+        searchPanel.add(searchField);
+
+        // Crear el ImageIcon desde el archivo de imagen
+        ImageIcon searchIcon = new ImageIcon("C:\\Users\\JWell\\Downloads\\ee.png");
+
+        // Crear un JButton con el ImageIcon
+        JButton searchButton = new JButton(searchIcon);
+        searchButton.setBorderPainted(false); // Opcional: Eliminar el borde
+        searchButton.setFocusPainted(false); // Opcional: Eliminar el borde de enfoque
+
+        searchButton.addActionListener(e -> {
+            String cedula = searchField.getText();
+            if (!cedula.isEmpty()) {
+                String[] clientData = op.obtenerDatosClientePorCedula(cedula);
+                if (clientData[0] != null && clientData[1] != null && clientData[2] != null) {
+                    txtCedula.setText(cedula);
+                    txtCliente.setText(clientData[0]);  // Nombre del cliente
+                    txtDireccion.setText(clientData[1]); // Dirección del cliente
+                    txtEmail.setText(clientData[2]); // Correo electrónico del cliente
+                    searchDialog.setVisible(false); // Cierra el diálogo si se encuentra el cliente
+                } else {
+                    JOptionPane.showMessageDialog(searchDialog, "Cliente no encontrado.");
+                }
+            } else {
+                JOptionPane.showMessageDialog(searchDialog, "Ingrese una cédula.");
+            }
+        });
+        searchPanel.add(searchButton);
+
+        // Añadir el panel de búsqueda al diálogo
+        searchDialog.add(searchPanel, BorderLayout.CENTER);
+
+        searchDialog.setVisible(true);
+    }
+
     private void showServiceDialog() {
         JDialog serviceDialog = new JDialog(this, "Seleccionar Servicio", true);
         serviceDialog.setSize(500, 400);
