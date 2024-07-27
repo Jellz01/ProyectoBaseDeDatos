@@ -2,7 +2,6 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.*;
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -12,34 +11,20 @@ import static java.lang.Integer.parseInt;
 
 public class FormularioFactura extends JFrame implements ActionListener {
 
-    private JButton botGrabar;
-
-    public float precioUnitario;
-
-    int cantidadServiciol;
-    float subtotal;
-    private JButton botCancelar;
-    private JTextField txtNum;
-    private JTextField txtFecha;
-    private JTextField txtDireccion;
-    JTextField txtEmail;
-    public JTextField txtSubT;
-    public JTextField txtIva;
-    private JTextField txtCant;
-    public JTextField txtPrecioU;
-    public JTextField txtTotal;
-    private Operaciones op;
-    private JButton btnSelectClient;
-    private JTextField txtCliente;
+    // Variables para la interfaz
+    private JTextField txtNum, txtFecha, txtCliente, txtDireccion, txtEmail, txtUsuario, txtCedula, txtSubT, txtIva, txtTotal;
+    private JButton btnSelectClient, botGrabar, botCancelar;
     private JTable productTable;
-
-    public String cliente;
-
-    public String usuarioU;
     private DefaultTableModel tableModel;
-    private JTextField txtUsuario; // Declare the new JTextField for the user input
-
-    String servicio;
+    private Operaciones op;
+    private String usuarioU;
+    private String servicio;
+    private int cantidadServiciol;
+    private float precioUnitario;
+    private String cliente;
+    private float subtotal;
+    private float iva;
+    private float total;
 
     public FormularioFactura(Operaciones op, String usuarioU) {
         this.usuarioU = usuarioU;
@@ -94,41 +79,49 @@ public class FormularioFactura extends JFrame implements ActionListener {
         btnSelectClient.addActionListener(e -> showClientDialog());
         this.add(btnSelectClient);
 
-        JLabel labDireccion = new JLabel("Direccion:");
-        labDireccion.setBounds(10, 95, 90, 25);
+        // Add Cedula label and text field
+        JLabel labCedula = new JLabel("Cédula:");
+        labCedula.setBounds(10, 95, 90, 25);
+        this.add(labCedula);
+
+        txtCedula = new JTextField();
+        txtCedula.setBounds(100, 95, 200, 25);
+        txtCedula.setEnabled(false);
+        this.add(txtCedula);
+
+        JLabel labDireccion = new JLabel("Dirección:");
+        labDireccion.setBounds(10, 125, 90, 25);
         this.add(labDireccion);
         txtDireccion = new JTextField();
-        txtDireccion.setBounds(100, 95, 200, 25);
+        txtDireccion.setBounds(100, 125, 200, 25);
         txtDireccion.setEnabled(false);
         this.add(txtDireccion);
 
         // New JLabel and JTextField for Usuario
         JLabel labUsuario = new JLabel("Usuario:");
-        labUsuario.setBounds(10, 125, 90, 25);
+        labUsuario.setBounds(10, 155, 90, 25);
         this.add(labUsuario);
 
         txtUsuario = new JTextField();
-        txtUsuario.setBounds(100, 125, 200, 25);
+        txtUsuario.setBounds(100, 155, 200, 25);
         String usuario = op.obtenerNombreUsuario(usuarioU);
         txtUsuario.setText(usuario);
         txtUsuario.setEnabled(false);
         this.add(txtUsuario);
 
-
         JLabel labEmail = new JLabel("Email:");
-        labEmail.setBounds(10, 155, 90, 25);
+        labEmail.setBounds(10, 185, 90, 25);
         this.add(labEmail);
 
         txtEmail = new JTextField();
-        txtEmail.setBounds(100, 155, 200, 25);
+        txtEmail.setBounds(100, 185, 200, 25);
         String email = op.obtenerEmailCliente(cliente);
         txtEmail.setText(email);
         txtEmail.setEnabled(false);
         this.add(txtEmail);
 
-
         JLabel labProductos = new JLabel("Producto:");
-        labProductos.setBounds(10, 185, 90, 25);
+        labProductos.setBounds(10, 215, 90, 25);
         this.add(labProductos);
 
         productTable = new JTable();
@@ -140,56 +133,55 @@ public class FormularioFactura extends JFrame implements ActionListener {
 
         productTable.setModel(tableModel);
         JScrollPane scrollPane = new JScrollPane(productTable);
-        scrollPane.setBounds(100, 185, 600, 150);
+        scrollPane.setBounds(100, 215, 600, 150);
         this.add(scrollPane);
 
         JButton btnAddProduct = new JButton("Agregar Producto");
-        btnAddProduct.setBounds(100, 345, 150, 25);
+        btnAddProduct.setBounds(100, 375, 150, 25);
         btnAddProduct.addActionListener(e -> showServiceDialog());
         this.add(btnAddProduct);
 
         JLabel labSubT = new JLabel("Subtotal:");
-        labSubT.setBounds(420, 375, 90, 25);
+        labSubT.setBounds(420, 405, 90, 25);
         this.add(labSubT);
         txtSubT = new JTextField();
-        txtSubT.setBounds(505, 375, 200, 25);
+        txtSubT.setBounds(505, 405, 200, 25);
         txtSubT.setText("0");
         txtSubT.setEditable(false);
         this.add(txtSubT);
 
         JLabel labIva = new JLabel("IVA 15%:");
-        labIva.setBounds(420, 405, 90, 25);
+        labIva.setBounds(420, 435, 90, 25);
         this.add(labIva);
         txtIva = new JTextField();
         txtIva.setEditable(false);
-        txtIva.setBounds(505, 405, 200, 25);
+        txtIva.setBounds(505, 435, 200, 25);
         this.add(txtIva);
 
         JLabel labTotal = new JLabel("Total:");
-        labTotal.setBounds(460, 435, 90, 25);
+        labTotal.setBounds(460, 465, 90, 25);
         this.add(labTotal);
         txtTotal = new JTextField();
         txtTotal.setSize(200, 25);
-        txtTotal.setLocation(505, 435);
+        txtTotal.setLocation(505, 465);
         txtTotal.setEnabled(false);
         this.add(txtTotal);
 
         botGrabar = new JButton("Registrar");
-        botGrabar.setBounds(60, 465, 100, 25);
+        botGrabar.setBounds(60, 495, 100, 25);
         botGrabar.addActionListener(this);
         this.add(botGrabar);
 
         botCancelar = new JButton("Salir");
-        botCancelar.setBounds(180, 465, 100, 25);
+        botCancelar.setBounds(180, 495, 100, 25);
         botCancelar.addActionListener(this);
         this.add(botCancelar);
 
         super.setTitle("Facturación");
-        super.setSize(800, 530);
+        super.setSize(800, 570);
         super.setLocationRelativeTo(null);
         super.setResizable(false);
         super.setVisible(true);
-
     }
 
     private void showClientDialog() {
@@ -218,13 +210,22 @@ public class FormularioFactura extends JFrame implements ActionListener {
         selectButton.addActionListener(e -> {
             int selectedRow = clientTable.getSelectedRow();
             if (selectedRow != -1) {
-                cliente = (String) clientTableModel.getValueAt(selectedRow, 0);
-                txtCliente.setText(cliente);
-                String direccion = op.obtenerDireccion(cliente);
-                String email = op.obtenerEmailCliente(cliente);
+                String clienteSeleccionado = (String) clientTableModel.getValueAt(selectedRow, 0);
+                txtCliente.setText(clienteSeleccionado);
+                String cedula = op.obtenerCedulaCliente(clienteSeleccionado); // Obtain Cedula
+
+                String direccion = op.obtenerDireccion(cedula);
+                if (direccion == null || direccion.trim().isEmpty()) {
+                    direccion = "Dirección no disponible";
+                }
+
+                String email = op.obtenerEmailCliente(clienteSeleccionado);
+
 
                 txtDireccion.setText(direccion);
                 txtEmail.setText(email);
+                txtCedula.setText(cedula); // Set Cedula
+
                 clientDialog.dispose();
             } else {
                 JOptionPane.showMessageDialog(this, "Por favor, seleccione un cliente.");
@@ -234,7 +235,6 @@ public class FormularioFactura extends JFrame implements ActionListener {
 
         clientDialog.setVisible(true);
     }
-
     private void showServiceDialog() {
         JDialog serviceDialog = new JDialog(this, "Seleccionar Servicio", true);
         serviceDialog.setSize(500, 400);
@@ -273,7 +273,7 @@ public class FormularioFactura extends JFrame implements ActionListener {
                 String cantidadStr = txtCantidad.getText();
 
                 try {
-                    int cantidad = Integer.parseInt(cantidadStr);
+                    int cantidad = parseInt(cantidadStr);
 
                     precioUnitario = op.obtenerPrecioUnitario(servicio);
                     float importe = cantidad * precioUnitario;

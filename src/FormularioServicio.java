@@ -128,7 +128,7 @@ public class FormularioServicio extends JFrame implements ActionListener {
                 iva = "N";
             }
 
-            String estadoo = "Desactivado";
+            String estadoo = "NoUsado";
             boolean cerrar = op.agregarServicio(codigo,nombre,precio,iva,estadoo);
             if(cerrar==true){
                 this.setVisible(false);

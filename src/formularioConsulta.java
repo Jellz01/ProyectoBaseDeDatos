@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.text.ParseException;
@@ -91,8 +92,8 @@ public class formularioConsulta extends JFrame implements ActionListener {
         this.add(labFecha);
 
         txtFecha = new JTextField();
-        txtFecha.setSize(120,25);
-        txtFecha.setLocation(150,130);
+        txtFecha.setSize(120, 25);
+        txtFecha.setLocation(150, 130);
         this.add(txtFecha);
 
 
@@ -101,8 +102,8 @@ public class formularioConsulta extends JFrame implements ActionListener {
         this.add(labHora);
 
         txtHora = new JTextField();
-        txtHora.setSize(120,25);
-        txtHora.setLocation(150,160);
+        txtHora.setSize(120, 25);
+        txtHora.setLocation(150, 160);
         this.add(txtHora);
 
 
@@ -128,61 +129,59 @@ public class formularioConsulta extends JFrame implements ActionListener {
         super.setVisible(true);
     }
 
-
-
     @Override
     public void actionPerformed(ActionEvent e) {
-
-
         if (e.getSource() == botGrabar) {
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
             SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
             try {
+                // Obtener la fecha y hora desde los campos de texto
+                String fechaTexto = txtFecha.getText(); // En formato yyyy-MM-dd
+                String horaTexto = txtHora.getText(); // En formato HH:mm
 
-                String fechaTexto = txtFecha.getText();
-                String horaTexto = txtHora.getText();
-
-
+                // Combinarlas en una sola cadena
                 String fechaHoraTexto = fechaTexto + " " + horaTexto;
 
-                // Parsear el texto combinado en un objeto Date
+                // Imprimir para verificar la cadena combinada
+                System.out.println("Fecha y hora combinadas: " + fechaHoraTexto);
+
+                // Parsear la cadena combinada en un objeto Date
                 Date fechaHoraDate = dateTimeFormat.parse(fechaHoraTexto);
 
+                // Convertir Date a Timestamp
+                Timestamp fechaHora = new Timestamp(fechaHoraDate.getTime());
+
+                // Imprimir el Timestamp para verificar
+                System.out.println("Timestamp generado: " + fechaHora);
+
                 String nombreMascota = txtNombre.getText();
-                String fechaHora = dateTimeFormat.format(fechaHoraDate);
-                String estadoo = "Scheduled";
+                String estado = "Scheduled";
+
+                // Obtener IDs de veterinario y cliente
                 String empleado = (String) veterinarios.getSelectedItem();
-                int empleadoI = (Integer) op.obtenerIDVeterinario(empleado);
-                System.out.println(empleadoI);
+                int empleadoId = op.obtenerIDVeterinario(empleado);
 
                 String cliente = (String) clientes.getSelectedItem();
-                int clienteI = op.obtenerIDCliente(cliente);
-                System.out.println(clienteI);
+                int clienteId = op.obtenerIDCliente(cliente);
 
+                String nombreAn = (String) tipos.getSelectedItem();
+                int mascotaId = op.obtenerIDmascota(nombreAn);
 
-                System.out.println( fechaHora);
+                // Agregar la cita
+                boolean estadoAgregado = op.agregarCita(nombreMascota, String.valueOf(fechaHora), estado, clienteId, empleadoId, mascotaId);
 
-
-                String nombreAn = (String)tipos.getSelectedItem();
-                int mascotaId  = op.obtenerIDmascota(nombreAn);
-                System.out.println(mascotaId);
-
-                boolean estado = op.agregarCita(nombreMascota, fechaHora, estadoo,clienteI ,empleadoI,2);
-
-
-                if(estado == true){
+                if (estadoAgregado) {
                     this.setVisible(false);
                 }
 
             } catch (ParseException ex) {
                 System.err.println("Error en el formato de fecha o hora: " + ex.getMessage());
+                JOptionPane.showMessageDialog(this, "ERROR: El formato de fecha o hora es incorrecto.", "ERROR", JOptionPane.ERROR_MESSAGE);
             }
         }
+
         if (e.getSource() == botCancelar) {
             this.setVisible(false);
         }
-
     }
 }

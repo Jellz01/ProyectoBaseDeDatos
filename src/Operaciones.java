@@ -253,7 +253,8 @@ public class Operaciones {
 
     public boolean agregarCita(String nombreMascota, String fechaHoraStr, String estado, int clienteId, int empleadoId, int mascotaId) {
         boolean state = false;
-        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm"); // Ajusta el formato aquí
+        // Ajustar el formato a 'yyyy-MM-dd HH:mm:ss'
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
         try {
             // Convertir String a Date
@@ -1044,7 +1045,8 @@ public class Operaciones {
         ArrayList<String> listaServicios = new ArrayList<>();
 
         try {
-            String query = "SELECT SER_NOMBRE FROM VE_SERVICIOS WHERE SER_ESTADO = 'Activo'";
+            String query = "SELECT SER_NOMBRE FROM VE_SERVICIOS WHERE SER_ESTADO = 'Activo' OR SER_ESTADO = 'NoUsado'";
+
             try (PreparedStatement statement = conn.prepareStatement(query);
                  ResultSet resultSet = statement.executeQuery()) {
 
@@ -1133,23 +1135,37 @@ public class Operaciones {
     public boolean eliminarServicio(String nombre) {
         boolean state = false;
 
+        // Query para verificar el estado del servicio
+        String checkQuery = "SELECT SER_ESTADO FROM VE_SERVICIOS WHERE SER_NOMBRE = ?";
+
         // Query para eliminar el servicio
         String deleteQuery = "DELETE FROM VE_SERVICIOS WHERE SER_NOMBRE = ?";
 
-        try (PreparedStatement deleteStmt = conn.prepareStatement(deleteQuery)) {
-            deleteStmt.setString(1, nombre);
-            int rowsAffected = deleteStmt.executeUpdate();
-            if (rowsAffected > 0) {
-                JOptionPane.showMessageDialog(null, "Servicio eliminado correctamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
-                state = true;
+        try (PreparedStatement checkStmt = conn.prepareStatement(checkQuery)) {
+            checkStmt.setString(1, nombre);
+            ResultSet rs = checkStmt.executeQuery();
+            if (rs.next()) {
+                String estado = rs.getString("SER_ESTADO");
+                if ("NoUsado".equals(estado)) {
+                    try (PreparedStatement deleteStmt = conn.prepareStatement(deleteQuery)) {
+                        deleteStmt.setString(1, nombre);
+                        int rowsAffected = deleteStmt.executeUpdate();
+                        if (rowsAffected > 0) {
+                            JOptionPane.showMessageDialog(null, "Servicio eliminado correctamente", "INFO", JOptionPane.INFORMATION_MESSAGE);
+                            state = true;
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Servicio no se pudo eliminar", "ERROR", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "El servicio no se puede eliminar porque no está presente en una factura", "ERROR", JOptionPane.ERROR_MESSAGE);
+                }
             } else {
-                JOptionPane.showMessageDialog(null, "Servicio no se pudo eliminar", "ERROR", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(null, "Servicio no encontrado", "ERROR", JOptionPane.ERROR_MESSAGE);
             }
         } catch (SQLException ex) {
             ex.printStackTrace();
-            JOptionPane.showMessageDialog(null, "Servicio no se pudo eliminar, modifquelo , presente en una factura", "ERROR", JOptionPane.ERROR_MESSAGE);
-
-            // Manejar la excepción según sea necesario
+            JOptionPane.showMessageDialog(null, "Ocurrió un error al intentar eliminar el servicio", "ERROR", JOptionPane.ERROR_MESSAGE);
         }
 
         return state;
@@ -1276,7 +1292,7 @@ public class Operaciones {
     public String obtenerDireccion(String nombre) {
         String datosServico = null; // Initialize to store the result
 
-        String query = "SELECT PER_DIRECCION FROM VE_PERSONAS vpp, VE_CLIENTES vcc WHERE vcc.CLI_ID=vpp.PER_ID AND PER_NOMBRE=?";
+        String query = "select PER_DIRECCION FROM VE_PERSONAS WHERE PER_CEDULA = ?";
 
         try (PreparedStatement statement = conn.prepareStatement(query)) {
             // Set the parameter for the PreparedStatement
@@ -2017,6 +2033,32 @@ public class Operaciones {
 
         return email;
     }
+
+
+    public String obtenerCedulaCliente(String clienteSeleccionado) {
+        String cedula = null;  // Initialize the email variable to avoid potential null pointer issues
+        String query = "SELECT PER_CEDULA FROM VE_PERSONAS WHERE PER_NOMBRE = ?";
+
+        try (PreparedStatement statement = conn.prepareStatement(query)) {
+            // Set the parameter for the PreparedStatement
+            statement.setString(1, clienteSeleccionado);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    // Retrieve the cédula from the result set
+                    cedula = resultSet.getString("PER_CEDULA");
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Handle the exception as needed
+        }
+
+        System.out.println(cedula);
+        return cedula;
+    }
+
+
 
 
 }
