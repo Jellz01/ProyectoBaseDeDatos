@@ -404,6 +404,7 @@ public class FormularioFactura extends JFrame implements ActionListener {
             properties.put("mail.smtp.host", "smtp.gmail.com");
             properties.put("mail.smtp.port", "587");
             String cliente = txtCliente.getText();
+            String correo = txtEmail.getText();
             String num = txtNum.getText();
             int numFactura = parseInt(num);
             String fecha = txtFecha.getText();
@@ -430,6 +431,8 @@ public class FormularioFactura extends JFrame implements ActionListener {
                 int idServicio = op.obtenerIDServicio(servicio);
                 System.out.println(idServicio);
 
+                System.out.println(numFactura);
+
 
                 boolean estadoDetalle = op.ingresarFacturaDetalles(cantidad, precioU, total, ivaF, totalFF, numFactura, idServicio);
 
@@ -443,7 +446,17 @@ public class FormularioFactura extends JFrame implements ActionListener {
                 JOptionPane.showMessageDialog(this, "Factura registrada exitosamente.");
                 ArrayList<String> contenidos = op.obtenerFacturas(numFactura);
 
-                SendEmail se = new SendEmail(properties, email, contenidos);
+
+                try {
+                    ArrayList<String> detallesFacturaList = op.obtenerDetallesFactura(Integer.parseInt(String.valueOf(numFactura)));
+                    System.out.println(detallesFacturaList);
+                    System.out.print(correo);
+                    SendEmail se = new SendEmail(properties,correo,detallesFacturaList,direccion,correo,cliente,txtCedula.getText());
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+
+
                 this.setVisible(false);
             } else {
                 JOptionPane.showMessageDialog(this, "Error al registrar la factura.");
